@@ -1,5 +1,7 @@
+"use client";
 import { useState } from "react";
 import { createClient } from "../../../utils/supabase/client";
+import { Field, Label, Input, Textarea, Select } from "@headlessui/react";
 
 const supabase = createClient();
 
@@ -35,7 +37,6 @@ export default function CreateInitiativePage() {
     setError(null);
     setSuccess(false);
 
-    // Convert links to JSON if provided
     let links = null;
     try {
       links = form.links ? JSON.parse(form.links) : null;
@@ -49,7 +50,6 @@ export default function CreateInitiativePage() {
       {
         ...form,
         links,
-        // user field is set automatically in backend (trigger or RLS)
       },
     ]);
     setLoading(false);
@@ -65,30 +65,69 @@ export default function CreateInitiativePage() {
     <div className="max-w-xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6">Créer une initiative</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="title" value={form.title} onChange={handleChange} required placeholder="Titre" className="w-full p-2 border rounded" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full p-2 border rounded" />
-        <input name="category" value={form.category} onChange={handleChange} placeholder="Catégorie" className="w-full p-2 border rounded" />
-        <select name="status" value={form.status} onChange={handleChange} className="w-full p-2 border rounded">
-          <option value="planned">Planifiée</option>
-          <option value="ongoing">En cours</option>
-          <option value="completed">Terminée</option>
-          <option value="cancelled">Annulée</option>
-        </select>
-        <input name="jurisdiction" value={form.jurisdiction} onChange={handleChange} required placeholder="Juridiction" className="w-full p-2 border rounded" />
-        <select name="jurisdiction_type" value={form.jurisdiction_type} onChange={handleChange} className="w-full p-2 border rounded">
-          <option value="city">Ville</option>
-          <option value="municipality">Municipalité</option>
-          <option value="department">Département</option>
-          <option value="region">Région</option>
-          <option value="other">Autre</option>
-        </select>
-        <input name="country" value={form.country} onChange={handleChange} placeholder="Pays" className="w-full p-2 border rounded" />
-        <input name="organizing_body" value={form.organizing_body} onChange={handleChange} placeholder="Organisme porteur" className="w-full p-2 border rounded" />
-        <input name="start_date" value={form.start_date} onChange={handleChange} type="date" placeholder="Date de début" className="w-full p-2 border rounded" />
-        <input name="end_date" value={form.end_date} onChange={handleChange} type="date" placeholder="Date de fin" className="w-full p-2 border rounded" />
-        <textarea name="objectives" value={form.objectives} onChange={handleChange} placeholder="Objectifs" className="w-full p-2 border rounded" />
-        <textarea name="outcomes" value={form.outcomes} onChange={handleChange} placeholder="Résultats" className="w-full p-2 border rounded" />
-        <textarea name="links" value={form.links} onChange={handleChange} placeholder='Liens (JSON, ex: ["https://..."])' className="w-full p-2 border rounded" />
+        <Field>
+          <Label htmlFor="title">Titre</Label>
+          <Input id="title" name="title" value={form.title} onChange={handleChange} required className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="description">Description</Label>
+          <Textarea id="description" name="description" value={form.description} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="category">Catégorie</Label>
+          <Input id="category" name="category" value={form.category} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="status">Statut</Label>
+          <Select id="status" name="status" value={form.status} onChange={handleChange} className="w-full p-2 border rounded">
+            <option value="planned">Planifiée</option>
+            <option value="ongoing">En cours</option>
+            <option value="completed">Terminée</option>
+            <option value="cancelled">Annulée</option>
+          </Select>
+        </Field>
+        <Field>
+          <Label htmlFor="jurisdiction">Juridiction</Label>
+          <Input id="jurisdiction" name="jurisdiction" value={form.jurisdiction} onChange={handleChange} required className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="jurisdiction_type">Type de juridiction</Label>
+          <Select id="jurisdiction_type" name="jurisdiction_type" value={form.jurisdiction_type} onChange={handleChange} className="w-full p-2 border rounded">
+            <option value="city">Ville</option>
+            <option value="municipality">Municipalité</option>
+            <option value="department">Département</option>
+            <option value="region">Région</option>
+            <option value="other">Autre</option>
+          </Select>
+        </Field>
+        <Field>
+          <Label htmlFor="country">Pays</Label>
+          <Input id="country" name="country" value={form.country} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="organizing_body">Organisme porteur</Label>
+          <Input id="organizing_body" name="organizing_body" value={form.organizing_body} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="start_date">Date de début</Label>
+          <Input id="start_date" name="start_date" value={form.start_date} onChange={handleChange} type="date" className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="end_date">Date de fin</Label>
+          <Input id="end_date" name="end_date" value={form.end_date} onChange={handleChange} type="date" className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="objectives">Objectifs</Label>
+          <Textarea id="objectives" name="objectives" value={form.objectives} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="outcomes">Résultats</Label>
+          <Textarea id="outcomes" name="outcomes" value={form.outcomes} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
+        <Field>
+          <Label htmlFor="links">Liens (JSON, ex: ["https://..."])</Label>
+          <Textarea id="links" name="links" value={form.links} onChange={handleChange} className="w-full p-2 border rounded" />
+        </Field>
         <button type="submit" disabled={loading} className="w-full px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-light)] disabled:opacity-50">
           {loading ? "Création..." : "Créer l'initiative"}
         </button>

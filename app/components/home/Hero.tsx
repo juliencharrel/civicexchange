@@ -11,7 +11,6 @@ export default function Hero() {
             Partagez vos <span className="text-blue-200">innovations</span> territoriales
           </h1>
           <p className="mb-6 text-lg">Explorez, documentez et adoptez les meilleures pratiques municipales. Une plateforme d’échange entre élus et représentants territoriaux.</p>
-          <Button variant="primary">Consulter les données</Button>
           <div className="flex gap-8 mt-8">
             <div>
               <div className="text-2xl font-bold">450+</div>

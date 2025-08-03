@@ -6,7 +6,7 @@ export default async function InitiativesSection() {
   const { data: initiatives, error } = await supabase
     .from("initiatives")
     .select("id, title, description, category, status, jurisdiction, jurisdiction_type, country, organizing_body, start_date, end_date, objectives, outcomes, links, created_at");
-console.log(initiatives);
+
   return (
     <section className="py-16 px-4 bg-white">
       <div className="max-w-7xl mx-auto">

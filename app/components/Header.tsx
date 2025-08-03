@@ -22,13 +22,10 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
   return (
     <header className="bg-white border-b">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-        <div className="font-bold text-xl text-[var(--color-primary)]">CivicExchange</div>
+        <Link href="/" className="font-bold text-xl text-[var(--color-primary)]">CivicExchange</Link>
         {/* Desktop menu */}
         <nav className="hidden md:flex gap-6 items-center">
-          <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Explorer</a>
-          <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Domaines</a>
-          <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Données</a>
-          <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Réseau</a>
+          
           {user && (
             <Link href="/initiatives/create" passHref legacyBehavior>
               <Button as="a" className="ml-4 bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]" variant="primary">
