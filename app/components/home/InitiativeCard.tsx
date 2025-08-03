@@ -60,7 +60,6 @@ export default function InitiativeCard({
           </ul>
         </div>
       )}
-      <Button variant="primary" className="mt-2">Consulter le dossier complet</Button>
     </div>
   );
 }
