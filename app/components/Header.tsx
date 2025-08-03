@@ -4,11 +4,15 @@ import { Menu, MenuItems, MenuItem, Transition, DialogPanel, Dialog } from "@hea
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Button from "./ui/Button";
 import LoginForm from "../LoginForm";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 
-export default function Header() {
+const supabase = createClient();
+
+export default function Header({ initialUser }: { initialUser: User | null }) {
   const [loginOpen, setLoginOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(initialUser);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -25,9 +29,13 @@ export default function Header() {
           <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Domaines</a>
           <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Données</a>
           <a href="#" className="hover:text-[var(--color-primary)] text-[var(--color-primary)]">Réseau</a>
-          <Button className="ml-4 bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]" variant="primary">
-            Publier une initiative
-          </Button>
+          {user && (
+            <Link href="/initiatives/create" passHref legacyBehavior>
+              <Button as="a" className="ml-4 bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]" variant="primary">
+                Publier une initiative
+              </Button>
+            </Link>
+          )}
           {user ? (
             <Button
               className="ml-2 bg-transparent text-[var(--color-primary)] border border-[var(--color-primary)]"
@@ -82,13 +90,17 @@ export default function Header() {
                     <a href="#" className={`block w-full text-left px-4 py-2 text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] rounded transition font-semibold ${active ? "bg-[var(--color-primary-light)]" : ""}`}>Réseau</a>
                   )}
                 </MenuItem>
-                <MenuItem>
-                  {({ active }) => (
-                    <Button className="w-full text-left px-4 py-2 bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]" variant="primary">
-                      Publier une initiative
-                    </Button>
-                  )}
-                </MenuItem>
+                {user && (
+                  <MenuItem>
+                    {({ active }) => (
+                      <Link href="/initiatives/create" passHref legacyBehavior>
+                        <Button as="a" className="w-full text-left px-4 py-2 bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]" variant="primary">
+                          Publier une initiative
+                        </Button>
+                      </Link>
+                    )}
+                  </MenuItem>
+                )}
                 <MenuItem>
                   {({ active }) => (
                     user ? (

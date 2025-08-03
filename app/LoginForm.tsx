@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { createClient } from "../utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
+
+const supabase = createClient();
 
 interface LoginFormProps {
   onLoginSuccess?: (user: User) => void;
