@@ -19,6 +19,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
     if (error) {
       alert(error.message);
     } else if (data.user) {
+      console.log(data.user);
       onLoginSuccess?.(data.user);
     }
   };

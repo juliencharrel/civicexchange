@@ -13,11 +13,11 @@ export default function Button({ className, variant = "primary", ...props }: But
       className={clsx(
         "px-4 py-2 rounded font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer",
         variant === "primary" &&
-          "bg-primary text-white data-active:bg-primary-dark data-hover:bg-primary-light",
+          "bg-[var(--color-primary)] text-white data-active:bg-[var(--color-primary-dark)] data-hover:bg-[var(--color-primary-light)]",
         variant === "secondary" &&
-          "bg-secondary text-white data-active:bg-secondary-dark data-hover:bg-secondary-light",
+          "bg-[var(--color-secondary)] text-white data-active:bg-[var(--color-secondary-dark)] data-hover:bg-[var(--color-secondary-light)]",
         variant === "ghost" &&
-          "bg-transparent text-primary hover:bg-primary/10 data-hover:bg-primary/10",
+          "bg-transparent text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] data-hover:bg-[var(--color-primary-light)]",
         className
       )}
       {...props}
