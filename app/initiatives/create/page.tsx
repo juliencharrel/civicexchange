@@ -125,7 +125,7 @@ export default function CreateInitiativePage() {
           <Textarea id="outcomes" name="outcomes" value={form.outcomes} onChange={handleChange} className="w-full p-2 border rounded" />
         </Field>
         <Field>
-          <Label htmlFor="links">Liens (JSON, ex: ["https://..."])</Label>
+          <Label htmlFor="links">Liens (JSON, ex: [&quot;https://...&quot;])</Label>
           <Textarea id="links" name="links" value={form.links} onChange={handleChange} className="w-full p-2 border rounded" />
         </Field>
         <button type="submit" disabled={loading} className="w-full px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-light)] disabled:opacity-50">

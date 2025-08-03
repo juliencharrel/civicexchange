@@ -1,5 +1,3 @@
-import Button from "../ui/Button";
-
 export default function Hero() {
   return (
     <section className="bg-gradient-to-br from-blue-700 to-blue-400 text-white py-16 px-4">

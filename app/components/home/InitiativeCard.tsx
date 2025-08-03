@@ -1,6 +1,4 @@
 // app/components/home/InitiativeCard.tsx
-import Button from "../ui/Button";
-
 export default function InitiativeCard({
   title,
   description,
@@ -28,7 +26,7 @@ export default function InitiativeCard({
   end_date?: string;
   objectives?: string;
   outcomes?: string;
-  links?: any;
+  links?: unknown;
 }) {
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -50,7 +48,7 @@ export default function InitiativeCard({
       </div>
       {objectives && <div className="mb-2"><span className="font-semibold">Objectifs:</span> {objectives}</div>}
       {outcomes && <div className="mb-2"><span className="font-semibold">Résultats:</span> {outcomes}</div>}
-      {links && Array.isArray(links) && links.length > 0 && (
+      {Array.isArray(links) && links.length > 0 && (
         <div className="mb-2">
           <span className="font-semibold">Liens:</span>
           <ul className="list-disc ml-5">
