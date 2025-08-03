@@ -6,6 +6,16 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const PUBLIC_ROUTES = [
+    '/', // home
+    '/initiatives', // listing
+    // ajoute d'autres routes publiques ici
+  ];
+  
+  function isPublicRoute(pathname: string) {
+    return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'));
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -39,6 +49,7 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
+    !isPublicRoute(request.nextUrl.pathname) &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
