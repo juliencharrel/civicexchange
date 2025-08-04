@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Label } from "../../components/ui/label";
 
 const supabase = createClient();
