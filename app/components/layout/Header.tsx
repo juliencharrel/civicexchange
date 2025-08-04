@@ -2,9 +2,9 @@
 import { Fragment, useState } from "react";
 import { Menu, MenuItems, MenuItem, Transition, DialogPanel, Dialog } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import Button from "./ui/Button";
-import LoginForm from "../LoginForm";
-import { createClient } from "../../utils/supabase/client";
+import Button from "../ui/ButtonOld";
+import LoginForm from "../../(auth)/login/LoginForm";
+import { createClient } from "../../../lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 
