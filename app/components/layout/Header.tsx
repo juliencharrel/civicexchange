@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogClose
 } from "../ui/dialog";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button } from "../ui/button";
 import LoginForm from "../../(auth)/login/LoginForm";
 import { createClient } from "../../../lib/supabase/client";
@@ -77,7 +76,7 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
                 />
                 <DialogFooter className="sm:justify-start mt-4">
                   <DialogClose asChild>
-                    <Button type="button" variant="secondary">
+                    <Button type="button" variant="secondary" onClick={signOut}>
                       Fermer
                     </Button>
                   </DialogClose>

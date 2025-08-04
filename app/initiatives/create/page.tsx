@@ -325,9 +325,9 @@ export default function CreateInitiativePage() {
             name="links"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Liens (JSON, ex: ["https://..."])</FormLabel>
+                <FormLabel>Liens (JSON, ex: [&quot;https://...&quot;])</FormLabel>
                 <FormControl>
-                  <Textarea placeholder='["https://..."]' {...field} />
+                  <Textarea placeholder='[&quot;https://...&quot;]' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
