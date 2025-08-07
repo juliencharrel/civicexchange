@@ -26,7 +26,7 @@ export default function Hero() {
         </div>
         <div className="flex-1">
           {/* DashboardCard à insérer ici */}
-          <div className="bg-white/80 rounded-lg shadow p-6 text-blue-900 min-h-[200px]">DashboardCard (placeholder)</div>
+          <img src="/images/hero_image.png" alt="Dashboard Card" className="bg-white/80 rounded-lg shadow p-6 text-blue-900 min-h-[200px]" />
         </div>
       </div>
     </section>

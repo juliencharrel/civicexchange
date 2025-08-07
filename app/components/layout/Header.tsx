@@ -23,9 +23,11 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   async function signOut() {
+    console.log("signOut");
     await supabase.auth.signOut();
     setUser(null);
-  }
+    window.location.href = '/'
+    }
 
   return (
     <header className="bg-white border-b">
@@ -76,7 +78,7 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
                 />
                 <DialogFooter className="sm:justify-start mt-4">
                   <DialogClose asChild>
-                    <Button type="button" variant="secondary" onClick={signOut}>
+                    <Button type="button" variant="secondary">
                       Fermer
                     </Button>
                   </DialogClose>
@@ -88,10 +90,7 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
             <Button
               className="ml-2 bg-transparent text-[var(--color-primary)] border border-[var(--color-primary)]"
               variant="ghost"
-              onClick={() => {
-                setUser(null);
-                setDialogOpen(false);
-              }}
+              onClick={signOut}
             >
               Logout
             </Button>
