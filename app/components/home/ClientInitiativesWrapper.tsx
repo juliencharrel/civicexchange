@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import InitiativeCard from "./InitiativeCard";
 import type { User } from "@supabase/supabase-js";
+import type { Initiative } from "../../types/initiative";
 
 const supabase = createClient();
 
 interface ClientInitiativesWrapperProps {
-  initiatives: any[];
+  initiatives: Initiative[];
   initialUser: User | null;
   initialUserVotes: string[];
 }
@@ -23,6 +24,7 @@ export default function ClientInitiativesWrapper({
   useEffect(() => {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
       setUser(session?.user || null);
       
       if (session?.user) {
@@ -48,7 +50,7 @@ export default function ClientInitiativesWrapper({
           key={initiative.id} 
           {...initiative} 
           userHasVoted={userVotes.includes(initiative.id)}
-          userId={user?.id || null}
+          currentUser={user}
         />
       ))}
     </>

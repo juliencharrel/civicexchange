@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Hero() {
   return (
     <section className="bg-gradient-to-br from-blue-700 to-blue-400 text-white py-16 px-4">
@@ -26,7 +28,7 @@ export default function Hero() {
         </div>
         <div className="flex-1">
           {/* DashboardCard à insérer ici */}
-          <img src="/images/hero_image.png" alt="Dashboard Card" className="bg-white/80 rounded-lg shadow p-6 text-blue-900 min-h-[200px]" />
+          <Image width={900} height={400} src="/images/hero_image.png" alt="Dashboard Card" className="bg-white/80 rounded-lg shadow p-6 text-blue-900 min-h-[200px]" />
         </div>
       </div>
     </section>

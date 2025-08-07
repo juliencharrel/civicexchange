@@ -2,10 +2,16 @@
 import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { Button } from "../ui/button";
-import { ThumbsUp, ThumbsUpIcon } from "lucide-react";
+import { ThumbsUpIcon } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import type { Initiative } from "../../types/initiative";
 
 const supabase = createClient();
+
+interface InitiativeCardProps extends Initiative {
+  userHasVoted?: boolean;
+  currentUser?: User | null;
+}
 
 export default function InitiativeCard({
   id,
@@ -24,44 +30,17 @@ export default function InitiativeCard({
   links,
   votes_count = 0,
   userHasVoted = false,
-  userId = null,
-}: {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  jurisdiction: string;
-  jurisdiction_type?: string;
-  country?: string;
-  organizing_body?: string;
-  start_date?: string;
-  end_date?: string;
-  objectives?: string;
-  outcomes?: string;
-  links?: unknown;
-  votes_count?: number;
-  userHasVoted?: boolean;
-  userId?: string | null;
-}) {
-  const [user, setUser] = useState<User | null>(null);
+  currentUser = null,
+}: InitiativeCardProps) {
+  const [user, setUser] = useState<User | null>(currentUser);
   const [hasVoted, setHasVoted] = useState(userHasVoted);
   const [voteCount, setVoteCount] = useState(votes_count);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Récupérer l'utilisateur côté client si userId est fourni
+  // Mettre à jour l'utilisateur quand currentUser change
   useEffect(() => {
-    const getUser = async () => {
-      if (userId) {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    };
-    
-    getUser();
-  }, [userId]);
+    setUser(currentUser);
+  }, [currentUser]);
 
   // Mettre à jour l'état de vote si userHasVoted change
   useEffect(() => {
@@ -84,7 +63,6 @@ export default function InitiativeCard({
           .delete()
           .eq("initiative_id", id)
           .eq("user_id", user.id);
-          console.log(error);
 
         if (error) throw error;
         
