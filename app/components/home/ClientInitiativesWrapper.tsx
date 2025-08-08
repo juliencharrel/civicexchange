@@ -22,25 +22,44 @@ export default function ClientInitiativesWrapper({
   const [userVotes, setUserVotes] = useState<string[]>(initialUserVotes);
 
   useEffect(() => {
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        // Récupérer les votes du nouvel utilisateur
-        const { data: votes } = await supabase
-          .from("initiatives_votes")
-          .select("initiative_id")
-          .eq("user_id", session.user.id);
+    let subscription: any = null;
+    
+    const setupAuthListener = async () => {
+      try {
+        // Écouter les changements d'authentification
+        const { data } = await supabase.auth.onAuthStateChange(async (event, session) => {
+          setUser(session?.user || null);
+          
+          if (session?.user) {
+            // Récupérer les votes du nouvel utilisateur
+            const { data: votes } = await supabase
+              .from("initiatives_votes")
+              .select("initiative_id")
+              .eq("user_id", session.user.id);
+            
+            setUserVotes(votes?.map(vote => vote.initiative_id) || []);
+          } else {
+            setUserVotes([]);
+          }
+        });
         
-        setUserVotes(votes?.map(vote => vote.initiative_id) || []);
-      } else {
-        setUserVotes([]);
+        subscription = data.subscription;
+      } catch (error) {
+        console.error("Erreur lors de la configuration de l'écouteur d'authentification:", error);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    setupAuthListener();
+
+    return () => {
+      if (subscription) {
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error("Erreur lors du nettoyage de la subscription:", error);
+        }
+      }
+    };
   }, []);
 
   return (
