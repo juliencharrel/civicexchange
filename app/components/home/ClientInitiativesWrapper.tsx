@@ -22,7 +22,7 @@ export default function ClientInitiativesWrapper({
   const [userVotes, setUserVotes] = useState<string[]>(initialUserVotes);
 
   useEffect(() => {
-    let subscription: any = null;
+    let subscription: { unsubscribe: () => void } | null = null;
     
     const setupAuthListener = async () => {
       try {
