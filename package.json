@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build && npm run sentry:sourcemaps",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org natspark --project javascript-nextjs .next && sentry-cli sourcemaps upload --org natspark --project javascript-nextjs .next"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -16,6 +17,8 @@
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
+    "@sentry/cli": "^2.51.1",
+    "@sentry/nextjs": "^10.3.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.53.0",
     "class-variance-authority": "^0.7.1",
