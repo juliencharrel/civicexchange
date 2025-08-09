@@ -27,6 +27,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/pop
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "../../../lib/utils";
+import JurisdictionAutocomplete from "../../components/forms/JurisdictionAutocomplete";
+import type { Jurisdiction } from "../../types/initiative";
 
 const supabase = createClient();
 
@@ -35,20 +37,30 @@ const initiativeSchema = z.object({
   description: z.string().optional(),
   category: z.string().optional(),
   status: z.enum(["planned", "ongoing", "completed", "cancelled"]),
-  jurisdiction: z.string().min(1, { message: "La juridiction est requise." }),
-  jurisdiction_type: z.enum(["city", "municipality", "department", "region", "other"]),
-  country: z.string().optional(),
   organizing_body: z.string().optional(),
   start_date: z.date().optional(),
   end_date: z.date().optional(),
   objectives: z.string().optional(),
   outcomes: z.string().optional(),
   links: z.string().optional(),
+  details: z.string().optional(),
+  tags: z.string().optional(), // On va traiter ça comme une string séparée par des virgules
+  // Champs de juridiction
+  jurisdiction_name: z.string().min(1, { message: "La juridiction est requise." }),
+  jurisdiction_country_code: z.string().optional(),
+  jurisdiction_country: z.string().optional(),
+  jurisdiction_region: z.string().optional(),
+  jurisdiction_latitude: z.number(),
+  jurisdiction_longitude: z.number(),
+  jurisdiction_osm_id: z.number(),
+  jurisdiction_osm_type: z.string(),
+  jurisdiction_type: z.enum(["city", "region", "country"]),
 });
 
 export default function CreateInitiativePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedJurisdiction, setSelectedJurisdiction] = useState<Omit<Jurisdiction, 'id' | 'created_at' | 'updated_at'> | null>(null);
 
   const form = useForm<z.infer<typeof initiativeSchema>>({
     resolver: zodResolver(initiativeSchema),
@@ -57,42 +69,119 @@ export default function CreateInitiativePage() {
       description: "",
       category: "",
       status: "planned",
-      jurisdiction: "",
-      jurisdiction_type: "city",
-      country: "",
       organizing_body: "",
       start_date: undefined,
       end_date: undefined,
       objectives: "",
       outcomes: "",
       links: "",
+      details: "",
+      tags: "",
+      // Champs de juridiction
+      jurisdiction_name: "",
+      jurisdiction_country_code: "",
+      jurisdiction_country: "",
+      jurisdiction_region: "",
+      jurisdiction_latitude: 0,
+      jurisdiction_longitude: 0,
+      jurisdiction_osm_id: 0,
+      jurisdiction_osm_type: "",
+      jurisdiction_type: "city",
     },
   });
 
   async function onSubmit(values: z.infer<typeof initiativeSchema>) {
     setError(null);
     setSuccess(false);
-    let links = null;
+    
     try {
-      links = values.links ? JSON.parse(values.links) : null;
-    } catch {
-      setError("Links must be valid JSON.");
-      return;
-    }
-    const { start_date, end_date, ...rest } = values;
-    const { error } = await supabase.from("initiatives").insert([
-      {
-        ...rest,
-        start_date: start_date ? start_date.toISOString().slice(0, 10) : null,
-        end_date: end_date ? end_date.toISOString().slice(0, 10) : null,
-        links,
-      },
-    ]);
-    if (error) {
-      setError(error.message);
-    } else {
+      // 1. D'abord, créer ou trouver la juridiction
+      let jurisdictionId: number;
+      
+      // Vérifier si la juridiction existe déjà
+      const { data: existingJurisdiction } = await supabase
+        .from('jurisdictions')
+        .select('id')
+        .eq('osm_id', values.jurisdiction_osm_id)
+        .eq('osm_type', values.jurisdiction_osm_type)
+        .single();
+
+      if (existingJurisdiction) {
+        jurisdictionId = existingJurisdiction.id;
+      } else {
+        // Créer une nouvelle juridiction
+        const { data: newJurisdiction, error: jurisdictionError } = await supabase
+          .from('jurisdictions')
+          .insert([{
+            name: values.jurisdiction_name,
+            country_code: values.jurisdiction_country_code || '',
+            country: values.jurisdiction_country || '',
+            region: values.jurisdiction_region || '',
+            latitude: values.jurisdiction_latitude,
+            longitude: values.jurisdiction_longitude,
+            osm_id: values.jurisdiction_osm_id,
+            osm_type: values.jurisdiction_osm_type,
+            type: values.jurisdiction_type,
+          }])
+          .select('id')
+          .single();
+
+        if (jurisdictionError) {
+          throw new Error(`Erreur lors de la création de la juridiction: ${jurisdictionError.message}`);
+        }
+        
+        jurisdictionId = newJurisdiction.id;
+      }
+
+      // 2. Traiter les liens et tags
+      let links = null;
+      if (values.links) {
+        try {
+          links = JSON.parse(values.links);
+        } catch {
+          throw new Error("Les liens doivent être au format JSON valide.");
+        }
+      }
+
+      const tags = values.tags ? values.tags.split(',').map(tag => tag.trim()).filter(Boolean) : null;
+
+      // 3. Récupérer l'utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Vous devez être connecté pour créer une initiative.");
+      }
+
+      // 4. Créer l'initiative
+      const { start_date, end_date, ...rest } = values;
+      const { error: initiativeError } = await supabase.from("initiatives").insert([
+        {
+          title: values.title,
+          description: values.description || null,
+          category: values.category || null,
+          status: values.status,
+          organizing_body: values.organizing_body || null,
+          start_date: start_date ? start_date.toISOString().slice(0, 10) : null,
+          end_date: end_date ? end_date.toISOString().slice(0, 10) : null,
+          objectives: values.objectives || null,
+          outcomes: values.outcomes || null,
+          details: values.details || null,
+          links,
+          tags,
+          user_id: user.id,
+          jurisdiction_id: jurisdictionId,
+        },
+      ]);
+
+      if (initiativeError) {
+        throw new Error(`Erreur lors de la création de l'initiative: ${initiativeError.message}`);
+      }
+
       setSuccess(true);
       form.reset();
+      setSelectedJurisdiction(null);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Une erreur inattendue s'est produite.");
     }
   }
 
@@ -165,51 +254,34 @@ export default function CreateInitiativePage() {
           />
           <FormField
             control={form.control}
-            name="jurisdiction"
-            render={({ field }) => (
+            name="jurisdiction_name"
+            render={() => (
               <FormItem>
                 <FormLabel>Juridiction</FormLabel>
                 <FormControl>
-                  <Input placeholder="Juridiction" {...field} />
+                  <JurisdictionAutocomplete
+                    onSelect={(jurisdiction) => {
+                      setSelectedJurisdiction(jurisdiction);
+                      form.setValue("jurisdiction_name", jurisdiction.name);
+                      form.setValue("jurisdiction_country_code", jurisdiction.country_code);
+                      form.setValue("jurisdiction_country", jurisdiction.country);
+                      form.setValue("jurisdiction_region", jurisdiction.region || '');
+                      form.setValue("jurisdiction_latitude", jurisdiction.latitude);
+                      form.setValue("jurisdiction_longitude", jurisdiction.longitude);
+                      form.setValue("jurisdiction_osm_id", jurisdiction.osm_id);
+                      form.setValue("jurisdiction_osm_type", jurisdiction.osm_type);
+                      form.setValue("jurisdiction_type", jurisdiction.type);
+                    }}
+                    value={selectedJurisdiction?.name || ''}
+                  />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="jurisdiction_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type de juridiction</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="city">Ville</SelectItem>
-                    <SelectItem value="municipality">Municipalité</SelectItem>
-                    <SelectItem value="department">Département</SelectItem>
-                    <SelectItem value="region">Région</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pays</FormLabel>
-                <FormControl>
-                  <Input placeholder="Pays" {...field} />
-                </FormControl>
-                <FormMessage />
+                {selectedJurisdiction && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Sélectionné : <span className="font-medium capitalize">{selectedJurisdiction.type}</span> • {selectedJurisdiction.country}
+                    {selectedJurisdiction.region && ` • ${selectedJurisdiction.region}`}
+                  </div>
+                )}
               </FormItem>
             )}
           />
@@ -322,6 +394,32 @@ export default function CreateInitiativePage() {
           />
           <FormField
             control={form.control}
+            name="details"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Détails supplémentaires</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Informations détaillées sur l'initiative..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags (séparés par des virgules)</FormLabel>
+                <FormControl>
+                  <Input placeholder="environnement, innovation, social..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="links"
             render={({ field }) => (
               <FormItem>
@@ -336,9 +434,9 @@ export default function CreateInitiativePage() {
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? "Création..." : "Créer l'initiative"}
           </Button>
-          {error && <div className="text-red-600">{error}</div>}
-          {success && <div className="text-green-600">Initiative créée !</div>}
-        </form>
+        {error && <div className="text-red-600">{error}</div>}
+        {success && <div className="text-green-600">Initiative créée !</div>}
+      </form>
       </Form>
     </div>
   );

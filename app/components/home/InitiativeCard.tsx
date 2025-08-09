@@ -2,15 +2,17 @@
 import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { Button } from "../ui/button";
-import { ThumbsUpIcon } from "lucide-react";
+import { ThumbsUpIcon, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import type { Initiative } from "../../types/initiative";
+import type { Initiative, Jurisdiction } from "../../types/initiative";
 
 const supabase = createClient();
 
 interface InitiativeCardProps extends Initiative {
   userHasVoted?: boolean;
   currentUser?: User | null;
+  jurisdiction?: Jurisdiction;
 }
 
 export default function InitiativeCard({
@@ -20,8 +22,6 @@ export default function InitiativeCard({
   category,
   status,
   jurisdiction,
-  jurisdiction_type,
-  country,
   organizing_body,
   start_date,
   end_date,
@@ -32,6 +32,7 @@ export default function InitiativeCard({
   userHasVoted = false,
   currentUser = null,
 }: InitiativeCardProps) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(currentUser);
   const [hasVoted, setHasVoted] = useState(userHasVoted);
   const [voteCount, setVoteCount] = useState(votes_count);
@@ -47,7 +48,9 @@ export default function InitiativeCard({
     setHasVoted(userHasVoted);
   }, [userHasVoted]);
 
-  const handleVote = async () => {
+  const handleVote = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêcher la navigation vers la page détaillée
+    
     if (!user) {
       alert("Vous devez être connecté pour voter");
       return;
@@ -90,34 +93,56 @@ export default function InitiativeCard({
     }
   };
 
+  const handleCardClick = () => {
+    router.push(`/initiatives/${id}`);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[var(--color-secondary)] font-bold">{category || "Initiative"}</span>
-        <span className="text-gray-400 text-xs">{jurisdiction}</span>
-        {country && <span className="text-gray-400 text-xs">({country})</span>}
+    <div 
+      className="bg-white rounded-lg shadow p-6 mb-6 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+      onClick={handleCardClick}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[var(--color-secondary)] font-bold">{category || "Initiative"}</span>
+          <span className="text-gray-400 text-xs">{jurisdiction?.name || "Localisation non spécifiée"}</span>
+          {jurisdiction?.country && <span className="text-gray-400 text-xs">({jurisdiction.country})</span>}
+        </div>
+        <ExternalLink className="h-4 w-4 text-gray-400" />
       </div>
+      
       <h3 className="text-lg font-bold mb-1">{title}</h3>
-      <p className="text-gray-600 mb-2">{description}</p>
+      <p className="text-gray-600 mb-2 line-clamp-2">{description}</p>
+      
       <div className="mb-2 text-xs text-gray-500">
         <span className="mr-2">Statut: {status}</span>
-        <span className="mr-2">Type: {jurisdiction_type}</span>
+        {jurisdiction?.type && <span className="mr-2">Type: {jurisdiction.type}</span>}
         {organizing_body && <span className="mr-2">Organisme: {organizing_body}</span>}
       </div>
+      
       <div className="mb-2 text-xs text-gray-500">
         {start_date && <span className="mr-2">Début: {start_date}</span>}
         {end_date && <span className="mr-2">Fin: {end_date}</span>}
       </div>
-      {objectives && <div className="mb-2"><span className="font-semibold">Objectifs:</span> {objectives}</div>}
-      {outcomes && <div className="mb-2"><span className="font-semibold">Résultats:</span> {outcomes}</div>}
+      
+      {objectives && (
+        <div className="mb-2 text-sm">
+          <span className="font-semibold">Objectifs:</span> 
+          <span className="line-clamp-1">{objectives}</span>
+        </div>
+      )}
+      
+      {outcomes && (
+        <div className="mb-2 text-sm">
+          <span className="font-semibold">Résultats:</span> 
+          <span className="line-clamp-1">{outcomes}</span>
+        </div>
+      )}
+      
       {Array.isArray(links) && links.length > 0 && (
-        <div className="mb-2">
+        <div className="mb-2 text-sm">
           <span className="font-semibold">Liens:</span>
-          <ul className="list-disc ml-5">
-            {links.map((link: string, i: number) => (
-              <li key={i}><a href={link} className="text-[var(--color-primary)] underline" target="_blank" rel="noopener noreferrer">{link}</a></li>
-            ))}
-          </ul>
+          <span className="text-gray-500"> {links.length} lien{links.length > 1 ? 's' : ''}</span>
         </div>
       )}
       

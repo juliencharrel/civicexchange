@@ -7,10 +7,21 @@ export default async function InitiativesSection() {
   // Récupérer l'utilisateur connecté côté serveur
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Récupérer les initiatives
+  // Récupérer les initiatives avec les juridictions
   const { data: initiatives, error } = await supabase
     .from("initiatives")
-    .select("id, title, description, category, status, jurisdiction, jurisdiction_type, country, organizing_body, start_date, end_date, objectives, outcomes, links, created_at, votes_count");
+    .select(`
+      id, title, description, category, status, organizing_body, start_date, end_date, 
+      objectives, outcomes, links, created_at, votes_count, user_id, jurisdiction_id,
+      jurisdiction:jurisdictions (
+        id,
+        name,
+        country_code,
+        country,
+        region,
+        type
+      )
+    `);
 
   // Si l'utilisateur est connecté, récupérer ses votes pour toutes les initiatives
   let userVotes: string[] = [];
