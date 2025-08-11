@@ -62,6 +62,11 @@ export default function Map({ latitude, longitude, name, className = "h-64" }: M
     <div 
       ref={mapRef} 
       className={`w-full rounded-lg border border-gray-200 ${className}`}
+      style={{
+        // Forcer un z-index bas pour éviter les conflits avec les modals
+        zIndex: 1,
+        position: 'relative'
+      }}
     />
   );
 }

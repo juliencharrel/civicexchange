@@ -12,6 +12,7 @@ import type { Initiative, Jurisdiction } from "@/types/initiative";
 import InitiativeRequestsDisplay from "../../components/initiatives/InitiativeRequestsDisplay";
 import CreateInitiativeRequest from "../../components/initiatives/CreateInitiativeRequest";
 import Map from "../../components/ui/map";
+import { useAuth } from "../../contexts/AuthContext";
 
 const supabase = createClient();
 
@@ -57,43 +58,32 @@ export default function InitiativeDetailsClient({
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Gestion de l'authentification en temps réel
+  // Utiliser le contexte d'authentification global
+  const { user: authUser } = useAuth();
+  
+  // Mettre à jour l'utilisateur quand le contexte change
   useEffect(() => {
-    let subscription: { unsubscribe: () => void } | null = null;
-    
-    const setupAuthListener = async () => {
-      try {
-        const { data } = await supabase.auth.onAuthStateChange(async (event, session) => {
-          setUser(session?.user || null);
-          
-          if (session?.user) {
-            // Récupérer les votes du nouvel utilisateur
-            const { data: votes } = await supabase
-              .from("initiatives_votes")
-              .select("initiative_id")
-              .eq("user_id", session.user.id);
-            
-            const userVotes = votes?.map(vote => vote.initiative_id) || [];
-            setUserHasVoted(userVotes.includes(initiative.id));
-          } else {
-            setUserHasVoted(false);
-          }
-        });
+    setUser(authUser);
+  }, [authUser]);
+  
+  // Mettre à jour les votes quand l'utilisateur change
+  useEffect(() => {
+    if (authUser) {
+      const fetchUserVotes = async () => {
+        const { data: votes } = await supabase
+          .from("initiatives_votes")
+          .select("initiative_id")
+          .eq("user_id", authUser.id);
         
-        subscription = data.subscription;
-      } catch (error) {
-        console.error("Erreur lors de la configuration de l'écouteur d'authentification:", error);
-      }
-    };
-
-    setupAuthListener();
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, [initiative.id]);
+        const userVotes = votes?.map(vote => vote.initiative_id) || [];
+        setUserHasVoted(userVotes.includes(initiative.id));
+      };
+      
+      fetchUserVotes();
+    } else {
+      setUserHasVoted(false);
+    }
+  }, [authUser, initiative.id]);
 
   const handleVote = async () => {
     if (!user) {

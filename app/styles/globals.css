@@ -153,3 +153,22 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
+
+/* Fix pour les conflits de z-index avec Leaflet */
+/* S'assurer que les modals Dialog ont un z-index très élevé */
+[data-radix-dialog-overlay] {
+  z-index: 9998 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 9999 !important;
+}
+
+/* Forcer les éléments Leaflet à rester en arrière-plan */
+.leaflet-container,
+.leaflet-control-container,
+.leaflet-popup,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  z-index: 1 !important;
+}

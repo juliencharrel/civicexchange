@@ -57,7 +57,6 @@ export default async function InitiativesSection() {
           {initiatives && initiatives.length > 0 ? (
             <ClientInitiativesWrapper 
               initiatives={initiatives}
-              initialUser={user}
               initialUserVotes={userVotes}
               requestCountMap={requestCountMap}
             />

@@ -5,14 +5,13 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { ThumbsUpIcon, ExternalLink, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
 import type { Initiative, Jurisdiction } from "../../types/initiative";
+import { useAuth } from "../../contexts/AuthContext";
 
 const supabase = createClient();
 
 interface InitiativeCardProps extends Initiative {
   userHasVoted?: boolean;
-  currentUser?: User | null;
   jurisdiction?: Jurisdiction;
   requestCount?: number;
 }
@@ -32,19 +31,13 @@ export default function InitiativeCard({
   links,
   votes_count = 0,
   userHasVoted = false,
-  currentUser = null,
   requestCount = 0,
 }: InitiativeCardProps) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(currentUser);
+  const { user } = useAuth();
   const [hasVoted, setHasVoted] = useState(userHasVoted);
   const [voteCount, setVoteCount] = useState(votes_count);
   const [isVoting, setIsVoting] = useState(false);
-
-  // Mettre à jour l'utilisateur quand currentUser change
-  useEffect(() => {
-    setUser(currentUser);
-  }, [currentUser]);
 
   // Mettre à jour l'état de vote si userHasVoted change
   useEffect(() => {

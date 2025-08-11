@@ -12,22 +12,12 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import LoginForm from "../../(auth)/login/LoginForm";
-import { createClient } from "../../../lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { useAuth } from "../../contexts/AuthContext";
 
-const supabase = createClient();
-
-export default function Header({ initialUser }: { initialUser: User | null }) {
-  const [user, setUser] = useState<User | null>(initialUser);
+export default function Header() {
+  const { user, signOut } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  async function signOut() {
-    console.log("signOut");
-    await supabase.auth.signOut();
-    setUser(null);
-    window.location.href = '/'
-    }
 
   return (
     <header className="bg-white border-b">
@@ -71,8 +61,7 @@ export default function Header({ initialUser }: { initialUser: User | null }) {
                   </button>
                 </DialogClose>
                 <LoginForm
-                  onLoginSuccess={(user) => {
-                    setUser(user);
+                  onLoginSuccess={() => {
                     setDialogOpen(false);
                   }}
                 />

@@ -269,7 +269,7 @@ export default function JurisdictionAutocomplete({
 
       {/* Résultats de recherche */}
       {showResults && results.length > 0 && (
-        <Card className="absolute z-50 w-full mt-1 max-h-60 overflow-auto border shadow-lg bg-white">
+        <Card className="absolute z-[9999] w-full mt-1 max-h-60 overflow-auto border shadow-lg bg-white">
           <div className="p-1">
             {results.map((place) => (
               <div
@@ -328,7 +328,7 @@ export default function JurisdictionAutocomplete({
 
       {/* Message si pas de résultats */}
       {showResults && !loading && results.length === 0 && input.length >= 3 && (
-        <Card className="absolute z-50 w-full mt-1 border shadow-lg bg-white">
+        <Card className="absolute z-[9999] w-full mt-1 border shadow-lg bg-white">
           <div className="p-4 text-center text-sm text-gray-500">
             Aucun lieu trouvé pour &quot;{input}&quot;
           </div>
