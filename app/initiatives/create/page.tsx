@@ -26,7 +26,7 @@ import { Calendar } from "../../components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "../../components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "../../../lib/utils";
+import { cn, upsertJurisdiction } from "../../../lib/utils";
 import JurisdictionAutocomplete from "../../components/forms/JurisdictionAutocomplete";
 import type { Jurisdiction } from "../../types/initiative";
 
@@ -95,43 +95,18 @@ export default function CreateInitiativePage() {
     setSuccess(false);
     
     try {
-      // 1. D'abord, créer ou trouver la juridiction
-      let jurisdictionId: number;
-      
-      // Vérifier si la juridiction existe déjà
-      const { data: existingJurisdiction } = await supabase
-        .from('jurisdictions')
-        .select('id')
-        .eq('osm_id', values.jurisdiction_osm_id)
-        .eq('osm_type', values.jurisdiction_osm_type)
-        .single();
-
-      if (existingJurisdiction) {
-        jurisdictionId = existingJurisdiction.id;
-      } else {
-        // Créer une nouvelle juridiction
-        const { data: newJurisdiction, error: jurisdictionError } = await supabase
-          .from('jurisdictions')
-          .insert([{
-            name: values.jurisdiction_name,
-            country_code: values.jurisdiction_country_code || '',
-            country: values.jurisdiction_country || '',
-            region: values.jurisdiction_region || '',
-            latitude: values.jurisdiction_latitude,
-            longitude: values.jurisdiction_longitude,
-            osm_id: values.jurisdiction_osm_id,
-            osm_type: values.jurisdiction_osm_type,
-            type: values.jurisdiction_type,
-          }])
-          .select('id')
-          .single();
-
-        if (jurisdictionError) {
-          throw new Error(`Erreur lors de la création de la juridiction: ${jurisdictionError.message}`);
-        }
-        
-        jurisdictionId = newJurisdiction.id;
-      }
+      // 1. Créer ou trouver la juridiction
+      const { id: jurisdictionId } = await upsertJurisdiction(supabase, {
+        name: values.jurisdiction_name,
+        country_code: values.jurisdiction_country_code,
+        country: values.jurisdiction_country,
+        region: values.jurisdiction_region,
+        latitude: values.jurisdiction_latitude,
+        longitude: values.jurisdiction_longitude,
+        osm_id: values.jurisdiction_osm_id,
+        osm_type: values.jurisdiction_osm_type,
+        type: values.jurisdiction_type,
+      });
 
       // 2. Traiter les liens et tags
       let links = null;

@@ -87,6 +87,55 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     .select("*", { count: "exact", head: true })
     .eq("initiative_id", id);
 
+  // Récupérer les demandes d'utilisation côté serveur
+  const { data: initiativeRequests } = await supabase
+    .from('initiative_requests')
+    .select(`
+      jurisdiction_id,
+      jurisdiction:jurisdictions (
+        id,
+        name,
+        country,
+        region,
+        type
+      )
+    `)
+    .eq('initiative_id', id);
+
+  // Note: On ne vérifie plus si l'utilisateur a fait une demande
+  // car il peut faire plusieurs demandes pour la même initiative dans différentes juridictions
+
+  // Traiter les données des demandes
+  const requestCounts = new Map<string, {
+    jurisdiction_id: string;
+    jurisdiction_name: string;
+    jurisdiction_country: string;
+    jurisdiction_region?: string;
+    jurisdiction_type: string;
+    request_count: number;
+  }>();
+
+  initiativeRequests?.forEach((request) => {
+    const jurisdiction = request.jurisdiction;
+    if (!jurisdiction) return;
+
+    const jurisdictionData = Array.isArray(jurisdiction) ? jurisdiction[0] : jurisdiction;
+    const key = jurisdictionData.id;
+    
+    if (requestCounts.has(key)) {
+      requestCounts.get(key)!.request_count++;
+    } else {
+      requestCounts.set(key, {
+        jurisdiction_id: jurisdictionData.id,
+        jurisdiction_name: jurisdictionData.name,
+        jurisdiction_country: jurisdictionData.country,
+        jurisdiction_region: jurisdictionData.region,
+        jurisdiction_type: jurisdictionData.type,
+        request_count: 1
+      });
+    }
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -95,6 +144,7 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
           currentUser={user}
           userHasVoted={userVotes.includes(id)}
           voteCount={voteCount || 0}
+          requestCounts={Array.from(requestCounts.values())}
         />
       </div>
     </div>

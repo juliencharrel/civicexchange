@@ -11,12 +11,14 @@ interface ClientInitiativesWrapperProps {
   initiatives: Initiative[];
   initialUser: User | null;
   initialUserVotes: string[];
+  requestCountMap: Map<string, number>;
 }
 
 export default function ClientInitiativesWrapper({ 
   initiatives, 
   initialUser, 
-  initialUserVotes 
+  initialUserVotes,
+  requestCountMap
 }: ClientInitiativesWrapperProps) {
   const [user, setUser] = useState<User | null>(initialUser);
   const [userVotes, setUserVotes] = useState<string[]>(initialUserVotes);
@@ -64,14 +66,15 @@ export default function ClientInitiativesWrapper({
 
   return (
     <>
-      {initiatives.map((initiative) => (
-        <InitiativeCard 
-          key={initiative.id} 
-          {...initiative} 
-          userHasVoted={userVotes.includes(initiative.id)}
-          currentUser={user}
-        />
-      ))}
+              {initiatives.map((initiative) => (
+          <InitiativeCard
+            key={initiative.id}
+            {...initiative}
+            userHasVoted={userVotes.includes(initiative.id)}
+            currentUser={user}
+            requestCount={requestCountMap.get(initiative.id) || 0}
+          />
+        ))}
     </>
   );
 } 

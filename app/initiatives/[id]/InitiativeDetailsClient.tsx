@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "../../components/ui/separator";
-import { Calendar, User as UserIcon, ThumbsUp, Edit, ArrowLeft, Globe, Building, Target, Award, Link, MapPin, Tag } from "lucide-react";
+import { Calendar, User as UserIcon, ThumbsUp, Edit, ArrowLeft, Globe, Building, Target, Award, Link, MapPin, Tag, Users } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import type { Initiative, Jurisdiction } from "@/types/initiative";
+import InitiativeRequestsDisplay from "../../components/initiatives/InitiativeRequestsDisplay";
+import CreateInitiativeRequest from "../../components/initiatives/CreateInitiativeRequest";
+import Map from "../../components/ui/map";
 
 const supabase = createClient();
 
@@ -31,13 +34,22 @@ interface InitiativeDetailsClientProps {
   currentUser: User | null;
   userHasVoted: boolean;
   voteCount: number;
+  requestCounts: {
+    jurisdiction_id: string;
+    jurisdiction_name: string;
+    jurisdiction_country: string;
+    jurisdiction_region?: string;
+    jurisdiction_type: string;
+    request_count: number;
+  }[];
 }
 
 export default function InitiativeDetailsClient({ 
   initiative, 
   currentUser, 
   userHasVoted: initialUserHasVoted, 
-  voteCount: initialVoteCount 
+  voteCount: initialVoteCount,
+  requestCounts
 }: InitiativeDetailsClientProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(currentUser);
@@ -221,48 +233,21 @@ export default function InitiativeDetailsClient({
             </h3>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Informations textuelles */}
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">Juridiction</span>
-                  </div>
-                  <p className="text-gray-900 font-medium">{initiative.jurisdiction?.name || "Non spécifiée"}</p>
+              {/* Carte interactive */}
+              {initiative.jurisdiction?.latitude && initiative.jurisdiction?.longitude ? (
+                <Map 
+                  latitude={initiative.jurisdiction.latitude}
+                  longitude={initiative.jurisdiction.longitude}
+                  name={initiative.jurisdiction.name}
+                  className="h-80"
+                />
+              ) : (
+                <div className="h-80 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Coordonnées non disponibles</p>
                 </div>
-                
-                {initiative.jurisdiction?.type && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-gray-700">Type de juridiction</span>
-                    </div>
-                    <p className="text-gray-900 font-medium capitalize">{initiative.jurisdiction.type}</p>
-                  </div>
-                )}
-                
-                {initiative.jurisdiction?.region && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="h-4 w-4 text-purple-600" />
-                      <span className="text-sm font-medium text-gray-700">Région</span>
-                    </div>
-                    <p className="text-gray-900 font-medium">{initiative.jurisdiction.region}</p>
-                  </div>
-                )}
-                
-                {initiative.jurisdiction?.country && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="h-4 w-4 text-indigo-600" />
-                      <span className="text-sm font-medium text-gray-700">Pays</span>
-                    </div>
-                    <p className="text-gray-900 font-medium">{initiative.jurisdiction.country}</p>
-                  </div>
-                )}
-              </div>
+              )}
 
-              {/* Carte visuelle */}
+              {/* Informations de localisation */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200">
                 <div className="text-center space-y-4">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
@@ -297,10 +282,6 @@ export default function InitiativeDetailsClient({
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-75"></div>
                     <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse delay-150"></div>
                   </div>
-                  
-                  <p className="text-xs text-gray-500 mt-2">
-                    Zone d&apos;impact de l&apos;initiative
-                  </p>
                 </div>
               </div>
             </div>
@@ -434,6 +415,35 @@ export default function InitiativeDetailsClient({
               </div>
             </div>
           )}
+
+          {/* Section des demandes d'utilisation */}
+          <Separator />
+          
+          <div className="space-y-6">
+            {/* En-tête avec titre et bouton */}
+            {currentUser && initiative.jurisdiction && (
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Demandes d&apos;utilisation dans d&apos;autres juridictions ({requestCounts.length})
+                  </h3>
+                </div>
+                <CreateInitiativeRequest
+                  initiativeId={initiative.id}
+                  initiativeTitle={initiative.title}
+                  currentJurisdiction={initiative.jurisdiction}
+                  onRequestCreated={() => {
+                    // Recharger la page pour mettre à jour les données
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Affichage des demandes existantes */}
+            <InitiativeRequestsDisplay requestCounts={requestCounts} />
+          </div>
         </CardContent>
       </Card>
     </div>

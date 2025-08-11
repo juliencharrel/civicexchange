@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { Button } from "../ui/button";
-import { ThumbsUpIcon, ExternalLink } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { ThumbsUpIcon, ExternalLink, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import type { Initiative, Jurisdiction } from "../../types/initiative";
@@ -13,6 +14,7 @@ interface InitiativeCardProps extends Initiative {
   userHasVoted?: boolean;
   currentUser?: User | null;
   jurisdiction?: Jurisdiction;
+  requestCount?: number;
 }
 
 export default function InitiativeCard({
@@ -31,6 +33,7 @@ export default function InitiativeCard({
   votes_count = 0,
   userHasVoted = false,
   currentUser = null,
+  requestCount = 0,
 }: InitiativeCardProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(currentUser);
@@ -146,21 +149,32 @@ export default function InitiativeCard({
         </div>
       )}
       
-      {/* Section de vote */}
-      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-        <Button
-          variant={hasVoted ? "default" : "outline"}
-          size="sm"
-          onClick={handleVote}
-          disabled={isVoting}
-          className="flex items-center gap-2"
-        >
-          <ThumbsUpIcon className={`h-4 w-4 ${hasVoted ? 'text-white' : 'text-[var(--color-primary)]'}`} />
-          {hasVoted ? "Voté" : "Voter"}
-        </Button>
-        <span className="text-sm text-gray-600">
-          {voteCount} vote{voteCount !== 1 ? 's' : ''}
-        </span>
+      {/* Section de vote et requests */}
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={hasVoted ? "default" : "outline"}
+            size="sm"
+            onClick={handleVote}
+            disabled={isVoting}
+            className="flex items-center gap-2"
+          >
+            <ThumbsUpIcon className={`h-4 w-4 ${hasVoted ? 'text-white' : 'text-[var(--color-primary)]'}`} />
+            {hasVoted ? "Voté" : "Voter"}
+          </Button>
+          <span className="text-sm text-gray-600">
+            {voteCount} vote{voteCount !== 1 ? 's' : ''}
+          </span>
+          {requestCount > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              <Users className="h-3 w-3" />
+              {requestCount} demande{requestCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+        </div>
+        <div className="text-xs text-gray-500">
+          {jurisdiction?.name}
+        </div>
       </div>
     </div>
   );

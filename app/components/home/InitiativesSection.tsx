@@ -23,6 +23,19 @@ export default async function InitiativesSection() {
       )
     `);
 
+  // Récupérer le nombre de requests par initiative
+  const { data: requestCounts } = await supabase
+    .from('initiative_requests')
+    .select('initiative_id')
+    .not('initiative_id', 'is', null);
+
+  // Compter les requests par initiative
+  const requestCountMap = new Map<string, number>();
+  requestCounts?.forEach(request => {
+    const count = requestCountMap.get(request.initiative_id) || 0;
+    requestCountMap.set(request.initiative_id, count + 1);
+  });
+
   // Si l'utilisateur est connecté, récupérer ses votes pour toutes les initiatives
   let userVotes: string[] = [];
   if (user) {
@@ -46,6 +59,7 @@ export default async function InitiativesSection() {
               initiatives={initiatives}
               initialUser={user}
               initialUserVotes={userVotes}
+              requestCountMap={requestCountMap}
             />
           ) : (
             <div>Aucune initiative trouvée.</div>

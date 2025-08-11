@@ -32,4 +32,16 @@ export interface Jurisdiction {
   type: 'city' | 'region' | 'country';
   created_at?: string;
   updated_at?: string;
+}
+
+export interface InitiativeRequest {
+  id: string;
+  initiative_id: string;
+  jurisdiction_id: number;
+  user_id: string;
+  comment?: string;
+  created_at?: string;
+  // Relations
+  jurisdiction?: Jurisdiction;
+  initiative?: Initiative;
 } 
