@@ -9,7 +9,7 @@ export interface Initiative {
   end_date?: string;
   objectives?: string;
   outcomes?: string;
-  links?: unknown;
+  links?: string[] | unknown;
   created_at?: string;
   updated_at?: string;
   votes_count?: number;

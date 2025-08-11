@@ -152,7 +152,7 @@ export default function CreateInitiativePage() {
       }
 
       // 4. Créer l'initiative
-      const { start_date, end_date, ...rest } = values;
+      const { start_date, end_date } = values;
       const { error: initiativeError } = await supabase.from("initiatives").insert([
         {
           title: values.title,

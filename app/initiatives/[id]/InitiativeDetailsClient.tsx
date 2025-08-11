@@ -12,8 +12,22 @@ import type { Initiative, Jurisdiction } from "@/types/initiative";
 
 const supabase = createClient();
 
+interface InitiativeWithDetails extends Omit<Initiative, 'details' | 'links' | 'organizing_body' | 'objectives' | 'outcomes'> {
+  author: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  jurisdiction?: Jurisdiction;
+  details?: string;
+  links?: string[];
+  organizing_body?: string;
+  objectives?: string;
+  outcomes?: string;
+}
+
 interface InitiativeDetailsClientProps {
-  initiative: any; // Type flexible pour éviter les erreurs de type
+  initiative: InitiativeWithDetails;
   currentUser: User | null;
   userHasVoted: boolean;
   voteCount: number;
@@ -187,8 +201,11 @@ export default function InitiativeDetailsClient({
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-gray-500" />
                 <span className="text-sm font-medium">Statut:</span>
-                <Badge variant={initiative.status === 'active' ? 'default' : 'secondary'}>
-                  {initiative.status === 'active' ? 'Active' : 'Inactive'}
+                <Badge variant={initiative.status === 'ongoing' ? 'default' : 'secondary'}>
+                  {initiative.status === 'ongoing' ? 'En cours' : 
+                   initiative.status === 'completed' ? 'Terminé' :
+                   initiative.status === 'planned' ? 'Planifié' :
+                   initiative.status === 'cancelled' ? 'Annulé' : 'Inconnu'}
                 </Badge>
               </div>
             )}
@@ -282,7 +299,7 @@ export default function InitiativeDetailsClient({
                   </div>
                   
                   <p className="text-xs text-gray-500 mt-2">
-                    Zone d'impact de l'initiative
+                    Zone d&apos;impact de l&apos;initiative
                   </p>
                 </div>
               </div>
@@ -304,7 +321,7 @@ export default function InitiativeDetailsClient({
           )}
 
           {/* Détails supplémentaires */}
-          {initiative.details && (
+          {initiative.details && typeof initiative.details === 'string' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Détails supplémentaires
@@ -384,22 +401,19 @@ export default function InitiativeDetailsClient({
                 Liens utiles
               </h3>
               <div className="space-y-2">
-                {initiative.links.map((link: any, index: number) => {
-                  const linkString = typeof link === 'string' ? link : String(link);
-                  return (
-                    <div key={index} className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-500" />
-                      <a 
-                        href={linkString} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        {linkString}
-                      </a>
-                    </div>
-                  );
-                })}
+                {initiative.links.map((link: string, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-gray-500" />
+                    <a 
+                      href={link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      {link}
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -412,7 +426,7 @@ export default function InitiativeDetailsClient({
                 Tags
               </h3>
               <div className="flex flex-wrap gap-2">
-                {initiative.tags.map((tag: any, index: number) => (
+                {initiative.tags.map((tag: string, index: number) => (
                   <Badge key={index} variant="outline">
                     {tag}
                   </Badge>

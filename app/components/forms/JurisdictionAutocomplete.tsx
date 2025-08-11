@@ -84,7 +84,7 @@ export default function JurisdictionAutocomplete({
   const [showResults, setShowResults] = useState(false);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string>("");
   
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fermer les résultats si on clique à l'extérieur
@@ -330,7 +330,7 @@ export default function JurisdictionAutocomplete({
       {showResults && !loading && results.length === 0 && input.length >= 3 && (
         <Card className="absolute z-50 w-full mt-1 border shadow-lg bg-white">
           <div className="p-4 text-center text-sm text-gray-500">
-            Aucun lieu trouvé pour "{input}"
+            Aucun lieu trouvé pour &quot;{input}&quot;
           </div>
         </Card>
       )}

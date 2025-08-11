@@ -3,6 +3,20 @@ import { notFound } from "next/navigation";
 import InitiativeDetailsClient from "./InitiativeDetailsClient";
 import type { Initiative, Jurisdiction } from "../../types/initiative";
 
+type InitiativeWithDetails = Initiative & {
+  author: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  jurisdiction: Jurisdiction;
+  details?: string;
+  links?: string[];
+  organizing_body?: string;
+  objectives?: string;
+  outcomes?: string;
+};
+
 interface InitiativePageProps {
   params: Promise<{
     id: string;
@@ -77,14 +91,7 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <InitiativeDetailsClient 
-          initiative={initiativeWithAuthor as Initiative & {
-            author: {
-              id: string;
-              full_name: string;
-              email: string;
-            };
-            jurisdiction: Jurisdiction;
-          }}
+          initiative={initiativeWithAuthor as InitiativeWithDetails}
           currentUser={user}
           userHasVoted={userVotes.includes(id)}
           voteCount={voteCount || 0}
