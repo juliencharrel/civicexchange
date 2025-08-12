@@ -27,7 +27,7 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
   const { id } = await params;
   const supabase = await createClient();
   
-  console.log("Recherche de l'initiative avec l'ID:", id);
+
   
   // Récupérer l'initiative avec la juridiction
   const { data: initiative, error } = await supabase
@@ -50,7 +50,6 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
 
 
   if (error || !initiative) {
-    console.log("Initiative non trouvée, redirection vers 404");
     notFound();
   }
 
@@ -87,10 +86,14 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     .select("*", { count: "exact", head: true })
     .eq("initiative_id", id);
 
-  // Récupérer les demandes d'utilisation côté serveur
-  const { data: initiativeRequests } = await supabase
+  // Récupérer les demandes d'utilisation côté serveur avec les détails utilisateur
+  const { data: initiativeRequests, error: requestsError } = await supabase
     .from('initiative_requests')
     .select(`
+      id,
+      user_id,
+      comment,
+      created_at,
       jurisdiction_id,
       jurisdiction:jurisdictions (
         id,
@@ -102,10 +105,24 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     `)
     .eq('initiative_id', id);
 
+  // Récupérer les profils des utilisateurs séparément
+  const userIds = [...new Set(initiativeRequests?.map(req => req.user_id) || [])];
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', userIds);
+
+  const profilesMap = new Map();
+  profiles?.forEach(profile => {
+    profilesMap.set(profile.id, profile.display_name);
+  });
+
+
+
   // Note: On ne vérifie plus si l'utilisateur a fait une demande
   // car il peut faire plusieurs demandes pour la même initiative dans différentes juridictions
 
-  // Traiter les données des demandes
+  // Traiter les données des demandes avec les détails utilisateur
   const requestCounts = new Map<string, {
     jurisdiction_id: string;
     jurisdiction_name: string;
@@ -113,6 +130,13 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     jurisdiction_region?: string;
     jurisdiction_type: string;
     request_count: number;
+    requests: Array<{
+      id: string;
+      user_id: string;
+      user_display_name: string;
+      comment?: string;
+      created_at: string;
+    }>;
   }>();
 
   initiativeRequests?.forEach((request) => {
@@ -123,7 +147,15 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     const key = jurisdictionData.id;
     
     if (requestCounts.has(key)) {
-      requestCounts.get(key)!.request_count++;
+      const existing = requestCounts.get(key)!;
+      existing.request_count++;
+              existing.requests.push({
+          id: request.id,
+          user_id: request.user_id,
+          user_display_name: profilesMap.get(request.user_id) || 'Utilisateur',
+          comment: request.comment,
+          created_at: request.created_at
+        });
     } else {
       requestCounts.set(key, {
         jurisdiction_id: jurisdictionData.id,
@@ -131,7 +163,14 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
         jurisdiction_country: jurisdictionData.country,
         jurisdiction_region: jurisdictionData.region,
         jurisdiction_type: jurisdictionData.type,
-        request_count: 1
+        request_count: 1,
+        requests: [{
+          id: request.id,
+          user_id: request.user_id,
+          user_display_name: profilesMap.get(request.user_id) || 'Utilisateur',
+          comment: request.comment,
+          created_at: request.created_at
+        }]
       });
     }
   });

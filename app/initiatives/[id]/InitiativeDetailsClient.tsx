@@ -11,6 +11,7 @@ import type { User } from "@supabase/supabase-js";
 import type { Initiative, Jurisdiction } from "@/types/initiative";
 import InitiativeRequestsDisplay from "../../components/initiatives/InitiativeRequestsDisplay";
 import CreateInitiativeRequest from "../../components/initiatives/CreateInitiativeRequest";
+import RequestDetailsDialog from "../../components/initiatives/RequestDetailsDialog";
 import Map from "../../components/ui/map";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -42,6 +43,13 @@ interface InitiativeDetailsClientProps {
     jurisdiction_region?: string;
     jurisdiction_type: string;
     request_count: number;
+    requests: Array<{
+      id: string;
+      user_id: string;
+      user_display_name: string;
+      comment?: string;
+      created_at: string;
+    }>;
   }[];
 }
 
@@ -57,6 +65,8 @@ export default function InitiativeDetailsClient({
   const [userHasVoted, setUserHasVoted] = useState(initialUserHasVoted);
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [isVoting, setIsVoting] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedRequestCount, setSelectedRequestCount] = useState<any>(null);
 
   // Utiliser le contexte d'authentification global
   const { user: authUser } = useAuth();
@@ -87,8 +97,11 @@ export default function InitiativeDetailsClient({
 
   const handleVote = async () => {
     if (!user) {
-      // Rediriger vers la page de login
-      router.push("/login");
+      // Déclencher l'ouverture du modal de login du Header
+      const loginButton = document.querySelector('[data-login-trigger]') as HTMLButtonElement;
+      if (loginButton) {
+        loginButton.click();
+      }
       return;
     }
 
@@ -125,6 +138,55 @@ export default function InitiativeDetailsClient({
 
   const handleEdit = () => {
     router.push(`/initiatives/${initiative.id}/edit`);
+  };
+
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('initiative_requests')
+        .delete()
+        .eq('id', requestId)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Erreur lors de la suppression:', error);
+      } else {
+        // Recharger la page pour mettre à jour les données
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
+  };
+
+  const handleShowDetails = (requestCount: any) => {
+    setSelectedRequestCount(requestCount);
+    setDetailsDialogOpen(true);
+  };
+
+  const handleAddRequest = async (jurisdictionId: string, jurisdictionName: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('initiative_requests')
+        .insert({
+          initiative_id: initiative.id,
+          jurisdiction_id: jurisdictionId,
+          user_id: user.id
+        });
+      
+      if (error) {
+        console.error('Erreur lors de la création:', error);
+      } else {
+        // Recharger la page pour mettre à jour les données
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création:', error);
+    }
   };
 
   const isCreator = user?.id === initiative.user_id;
@@ -411,14 +473,14 @@ export default function InitiativeDetailsClient({
           
           <div className="space-y-6">
             {/* En-tête avec titre et bouton */}
-            {currentUser && initiative.jurisdiction && (
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Demandes d&apos;utilisation dans d&apos;autres juridictions ({requestCounts.length})
-                  </h3>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Demandes d&apos;utilisation dans d&apos;autres juridictions ({requestCounts.length})
+                </h3>
+              </div>
+              {user && initiative.jurisdiction ? (
                 <CreateInitiativeRequest
                   initiativeId={initiative.id}
                   initiativeTitle={initiative.title}
@@ -428,11 +490,40 @@ export default function InitiativeDetailsClient({
                     window.location.reload();
                   }}
                 />
-              </div>
-            )}
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    // Déclencher l'ouverture du modal de login du Header
+                    const loginButton = document.querySelector('[data-login-trigger]') as HTMLButtonElement;
+                    if (loginButton) {
+                      loginButton.click();
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Se connecter pour demander
+                </Button>
+              )}
+            </div>
 
             {/* Affichage des demandes existantes */}
-            <InitiativeRequestsDisplay requestCounts={requestCounts} />
+            <InitiativeRequestsDisplay 
+              requestCounts={requestCounts} 
+              currentUser={user}
+              onDeleteRequest={handleDeleteRequest}
+              onShowDetails={handleShowDetails}
+              onAddRequest={handleAddRequest}
+            />
+
+            {/* Dialog des détails des demandes */}
+            <RequestDetailsDialog
+              open={detailsDialogOpen}
+              onOpenChange={setDetailsDialogOpen}
+              requestCount={selectedRequestCount}
+            />
           </div>
         </CardContent>
       </Card>

@@ -129,14 +129,6 @@ export default function JurisdictionAutocomplete({
       
       const data: NominatimPlace[] = await response.json();
 
-      // Debug: logger les addresstype pour voir les valeurs possibles
-      console.log('Nominatim results:', data.map(place => ({
-        name: place.display_name.split(',')[0],
-        addresstype: place.addresstype,
-        class: place.class,
-        type: place.type
-      })));
-
       // Utiliser la fonction de filtrage améliorée
       const filtered = filterPlaces(data);
       

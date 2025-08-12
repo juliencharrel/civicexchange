@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +28,6 @@ export function AuthProvider({
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
       setUser(session?.user || null);
       setLoading(false);
     });
@@ -41,18 +41,12 @@ export function AuthProvider({
   }, [initialUser]);
 
   const signOut = async () => {
-    console.log('Déconnexion en cours...');
-    console.log('Utilisateur actuel:', user?.email);
-    
     try {
-      console.log('Appel de supabase.auth.signOut()...');
       const { error } = await supabase.auth.signOut();
-      console.log('Résultat de signOut:', { error });
       
       if (error) {
         console.error('Erreur lors de la déconnexion:', error);
       } else {
-        console.log('Déconnexion réussie');
         // Rediriger après déconnexion réussie
         router.push('/');
       }
@@ -61,8 +55,13 @@ export function AuthProvider({
     }
   };
 
+  const refreshUser = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    setUser(currentUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

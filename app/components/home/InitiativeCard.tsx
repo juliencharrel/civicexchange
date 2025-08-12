@@ -48,7 +48,11 @@ export default function InitiativeCard({
     e.stopPropagation(); // Empêcher la navigation vers la page détaillée
     
     if (!user) {
-      alert("Vous devez être connecté pour voter");
+      // Déclencher l'ouverture du modal de login du Header
+      const loginButton = document.querySelector('[data-login-trigger]') as HTMLButtonElement;
+      if (loginButton) {
+        loginButton.click();
+      }
       return;
     }
 

@@ -36,7 +36,9 @@ export default async function RootLayout({
       >
         <AuthProvider initialUser={user}>
           <Header />
-          {children}
+          <main className="pt-16">
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

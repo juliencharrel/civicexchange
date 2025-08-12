@@ -12,15 +12,18 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import LoginForm from "../../(auth)/login/LoginForm";
+import SignupForm from "../../(auth)/signup/SignupForm";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
+import UserMenu from "./UserMenu";
 
 export default function Header() {
   const { user, signOut } = useAuth();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b">
+    <header className="bg-white border-b fixed top-0 left-0 right-0 z-50">
       
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         <Link href="/" className="font-bold text-xl text-[var(--color-primary)]">CivicExchange</Link>
@@ -34,56 +37,66 @@ export default function Header() {
               </Button>
             </Link>
           )}
-          {/* Remplace la logique conditionnelle du Dialog dans le menu desktop par : */}
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className={`ml-2 bg-transparent text-[var(--color-primary)] border border-[var(--color-primary)]${user ? ' hidden' : ''}`}
-                variant="ghost"
-                onClick={() => setDialogOpen(true)}
-              >
-                Login
-              </Button>
-            </DialogTrigger>
-            {!user && (
-              <DialogContent className="max-w-md w-full p-6">
-                <DialogHeader>
-                  <DialogTitle>Connexion</DialogTitle>
-                  <DialogDescription>
-                    Connectez-vous pour publier une initiative ou accéder à votre espace personnel.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogClose asChild>
-                  <button
-                    className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600"
-                    aria-label="Fermer"
+          {/* Boutons Login et Signup pour les utilisateurs non connectés */}
+          {!user && (
+            <>
+              <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="ml-2 bg-transparent text-[var(--color-primary)] border border-[var(--color-primary)]"
+                    variant="ghost"
                   >
-                  </button>
-                </DialogClose>
-                <LoginForm
-                  onLoginSuccess={() => {
-                    setDialogOpen(false);
-                  }}
-                />
-                <DialogFooter className="sm:justify-start mt-4">
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">
-                      Fermer
-                    </Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            )}
-          </Dialog>
-          {user && (
-            <Button
-              className="ml-2 bg-transparent text-[var(--color-primary)] border border-[var(--color-primary)]"
-              variant="ghost"
-              onClick={signOut}
-            >
-              Logout
-            </Button>
+                    Connexion
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md w-full p-6">
+                  <DialogHeader>
+                    <DialogTitle>Connexion</DialogTitle>
+                    <DialogDescription>
+                      Connectez-vous pour publier une initiative ou accéder à votre espace personnel.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <LoginForm
+                    onLoginSuccess={() => {
+                      setLoginDialogOpen(false);
+                    }}
+                  />
+                  <DialogFooter className="sm:justify-start mt-4">
+                    <DialogClose asChild>
+                      <Button type="button" variant="secondary">
+                        Fermer
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={signupDialogOpen} onOpenChange={setSignupDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="ml-2 bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
+                    variant="default"
+                  >
+                    S'inscrire
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md w-full p-6">
+                  <DialogHeader>
+                    <DialogTitle>Inscription</DialogTitle>
+                    <DialogDescription>
+                      Créez votre compte pour accéder à toutes les fonctionnalités.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <SignupForm
+                    onSignupSuccess={() => {
+                      setSignupDialogOpen(false);
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </>
           )}
+          {user && <UserMenu />}
         </nav>
         
       </div>

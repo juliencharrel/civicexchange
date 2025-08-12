@@ -13,6 +13,12 @@ export async function updateSession(request: NextRequest) {
     // ajoute d'autres routes publiques ici
   ];
   
+  const PROTECTED_ROUTES = [
+    '/profile', // profile page
+    '/initiatives/create', // create initiative
+    '/private', // private page
+  ];
+  
   function isPublicRoute(pathname: string) {
     return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'));
   }
@@ -48,11 +54,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  function isProtectedRoute(pathname: string) {
+    return PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'));
+  }
+
   if (
     !user &&
-    !isPublicRoute(request.nextUrl.pathname) &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    (isProtectedRoute(request.nextUrl.pathname) || 
+     (!isPublicRoute(request.nextUrl.pathname) &&
+      !request.nextUrl.pathname.startsWith('/login') &&
+      !request.nextUrl.pathname.startsWith('/auth')))
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()

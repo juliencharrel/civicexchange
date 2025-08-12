@@ -48,7 +48,7 @@ export default async function InitiativesSection() {
   }
 
   return (
-    <section className="py-16 px-4 bg-white">
+    <section className="py-16 px-4 md:px-8 lg:px-12 bg-white">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-4">Initiatives territoriales qui performent</h2>
         <p className="mb-8 text-gray-600">Découvrez les initiatives les plus impactantes, documentées avec métriques et retours d&apos;expérience pour faciliter leur adaptation</p>
