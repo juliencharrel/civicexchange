@@ -15,7 +15,7 @@ import { createClient } from "../../../lib/supabase/client";
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
-  const [displayName, setDisplayName] = useState<string>("");
+  const [, setDisplayName] = useState<string>("");
   const supabase = createClient();
 
   useEffect(() => {

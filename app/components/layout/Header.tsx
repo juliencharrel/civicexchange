@@ -18,7 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import UserMenu from "./UserMenu";
 
 export default function Header() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
 
@@ -77,7 +77,7 @@ export default function Header() {
                     className="ml-2 bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
                     variant="default"
                   >
-                    S'inscrire
+                    S&apos;inscrire
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md w-full p-6">
@@ -89,7 +89,7 @@ export default function Header() {
                   </DialogHeader>
                   <SignupForm
                     onSignupSuccess={() => {
-                      setSignupDialogOpen(false);
+                      // Le dialog se fermera quand l'utilisateur clique sur "Fermer"
                     }}
                   />
                 </DialogContent>

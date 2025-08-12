@@ -79,7 +79,7 @@ export default function RequestDetailsDialog({
               
               {request.comment && (
                 <div className="mt-2 text-sm text-gray-700 italic">
-                  "{request.comment}"
+                  &quot;{request.comment}&quot;
                 </div>
               )}
             </div>

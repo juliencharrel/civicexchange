@@ -48,7 +48,7 @@ export default function SignupForm({ onSignupSuccess }: SignupFormProps) {
         setSuccess(true);
         onSignupSuccess?.();
       }
-    } catch (err) {
+    } catch {
       setError("Une erreur est survenue lors de l'inscription");
     } finally {
       setLoading(false);
@@ -65,9 +65,16 @@ export default function SignupForm({ onSignupSuccess }: SignupFormProps) {
             <p className="text-gray-600 mb-4">
               Un email de confirmation a été envoyé à <strong>{email}</strong>
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 mb-6">
               Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation pour activer votre compte.
             </p>
+            <Button 
+              onClick={() => onSignupSuccess?.()}
+              className="w-full"
+              variant="default"
+            >
+              Fermer
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -85,13 +92,13 @@ export default function SignupForm({ onSignupSuccess }: SignupFormProps) {
       <CardContent>
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <Label htmlFor="displayName">Nom d'affichage</Label>
+            <Label htmlFor="displayName">Nom d&apos;affichage</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 id="displayName"
                 type="text"
-                placeholder="Votre nom d'affichage"
+                placeholder="Votre nom d&apos;affichage"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="pl-10"
@@ -155,7 +162,7 @@ export default function SignupForm({ onSignupSuccess }: SignupFormProps) {
           </Button>
 
           <p className="text-xs text-gray-500 text-center">
-            En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+            En créant un compte, vous acceptez nos conditions d&apos;utilisation et notre politique de confidentialité.
           </p>
         </form>
       </CardContent>

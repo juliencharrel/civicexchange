@@ -77,7 +77,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       setSuccess(true);
       await refreshUser();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+    } catch {
       setError("Une erreur est survenue lors de la mise à jour du profil");
     } finally {
       setLoading(false);
@@ -117,18 +117,18 @@ export default function ProfileForm({ user }: ProfileFormProps) {
               className="bg-gray-50"
             />
             <p className="text-sm text-gray-500 mt-1">
-              L'email ne peut pas être modifié
+              L&apos;email ne peut pas être modifié
             </p>
           </div>
 
           <div>
-            <Label htmlFor="displayName">Nom d'affichage</Label>
+            <Label htmlFor="displayName">Nom d&apos;affichage</Label>
             <Input
               id="displayName"
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Votre nom d'affichage"
+              placeholder="Votre nom d&apos;affichage"
             />
             <p className="text-sm text-gray-500 mt-1">
               Ce nom sera visible par les autres utilisateurs

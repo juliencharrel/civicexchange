@@ -87,7 +87,7 @@ export default async function InitiativePage({ params }: InitiativePageProps) {
     .eq("initiative_id", id);
 
   // Récupérer les demandes d'utilisation côté serveur avec les détails utilisateur
-  const { data: initiativeRequests, error: requestsError } = await supabase
+  const { data: initiativeRequests } = await supabase
     .from('initiative_requests')
     .select(`
       id,

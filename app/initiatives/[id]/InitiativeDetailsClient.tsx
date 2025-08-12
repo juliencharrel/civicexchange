@@ -66,7 +66,21 @@ export default function InitiativeDetailsClient({
   const [voteCount, setVoteCount] = useState(initialVoteCount);
   const [isVoting, setIsVoting] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedRequestCount, setSelectedRequestCount] = useState<any>(null);
+  const [selectedRequestCount, setSelectedRequestCount] = useState<{
+    jurisdiction_id: string;
+    jurisdiction_name: string;
+    jurisdiction_country: string;
+    jurisdiction_region?: string;
+    jurisdiction_type: string;
+    request_count: number;
+    requests: Array<{
+      id: string;
+      user_id: string;
+      user_display_name: string;
+      comment?: string;
+      created_at: string;
+    }>;
+  } | null>(null);
 
   // Utiliser le contexte d'authentification global
   const { user: authUser } = useAuth();
@@ -161,12 +175,26 @@ export default function InitiativeDetailsClient({
     }
   };
 
-  const handleShowDetails = (requestCount: any) => {
+  const handleShowDetails = (requestCount: {
+    jurisdiction_id: string;
+    jurisdiction_name: string;
+    jurisdiction_country: string;
+    jurisdiction_region?: string;
+    jurisdiction_type: string;
+    request_count: number;
+    requests: Array<{
+      id: string;
+      user_id: string;
+      user_display_name: string;
+      comment?: string;
+      created_at: string;
+    }>;
+  }) => {
     setSelectedRequestCount(requestCount);
     setDetailsDialogOpen(true);
   };
 
-  const handleAddRequest = async (jurisdictionId: string, jurisdictionName: string) => {
+  const handleAddRequest = async (jurisdictionId: string) => {
     if (!user) return;
     
     try {
