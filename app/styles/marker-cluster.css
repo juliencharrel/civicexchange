@@ -1,0 +1,66 @@
+/* Styles pour les clusters de marqueurs */
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 15px;
+  font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.marker-cluster span {
+  line-height: 30px;
+}
+
+.marker-cluster-small {
+  background-color: rgba(59, 130, 246, 0.8);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(59, 130, 246, 0.9);
+}
+
+.marker-cluster-medium {
+  background-color: rgba(16, 185, 129, 0.8);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(16, 185, 129, 0.9);
+}
+
+.marker-cluster-large {
+  background-color: rgba(239, 68, 68, 0.8);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(239, 68, 68, 0.9);
+}
+
+/* Animation pour les clusters */
+.marker-cluster-animated {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+}
+
+.marker-cluster-animated div {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+}
+
+/* Hover effects */
+.marker-cluster:hover {
+  transform: scale(1.1);
+}
+
+.marker-cluster:hover div {
+  transform: scale(1.1);
+}

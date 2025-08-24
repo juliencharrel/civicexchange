@@ -16,6 +16,7 @@ import SignupForm from "../../(auth)/signup/SignupForm";
 import Link from "next/link";
 import { useAuth } from "../../contexts/AuthContext";
 import UserMenu from "./UserMenu";
+import LocationSearch from "./LocationSearch";
 
 export default function Header() {
   const { user } = useAuth();
@@ -27,6 +28,12 @@ export default function Header() {
       
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         <Link href="/" className="font-bold text-xl text-[var(--color-primary)]">CivicExchange</Link>
+        
+        {/* Barre de recherche de localisation */}
+        <div className="hidden md:block flex-1 max-w-md mx-8">
+          <LocationSearch />
+        </div>
+        
         {/* Desktop menu */}
         <nav className="flex gap-6 items-center">
           

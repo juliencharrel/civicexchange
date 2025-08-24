@@ -247,16 +247,10 @@ export default function CreateInitiativePage() {
                       form.setValue("jurisdiction_osm_type", jurisdiction.osm_type);
                       form.setValue("jurisdiction_type", jurisdiction.type);
                     }}
-                    value={selectedJurisdiction?.name || ''}
+                    value=""
                   />
                 </FormControl>
                 <FormMessage />
-                {selectedJurisdiction && (
-                  <div className="text-xs text-gray-600 mt-1">
-                    Sélectionné : <span className="font-medium capitalize">{selectedJurisdiction.type}</span> • {selectedJurisdiction.country}
-                    {selectedJurisdiction.region && ` • ${selectedJurisdiction.region}`}
-                  </div>
-                )}
               </FormItem>
             )}
           />

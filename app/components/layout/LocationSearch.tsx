@@ -1,25 +1,16 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MapPin, X } from "lucide-react";
-import type { Jurisdiction } from "@/types/initiative";
+import { Loader2, Search, X } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import LocationSearchResults from "@/components/shared/LocationSearchResults";
+import { Button } from "@/components/ui/button";
 
-interface JurisdictionAutocompleteProps {
-  onSelect: (jurisdiction: Omit<Jurisdiction, 'id' | 'created_at' | 'updated_at'>) => void;
-  placeholder?: string;
-  value?: string;
-  disabled?: boolean;
-}
-
-export default function JurisdictionAutocomplete({ 
-  onSelect, 
-  placeholder = "Tapez une ville, région ou pays (min. 3 lettres)",
-  value = "",
-  disabled = false
-}: JurisdictionAutocompleteProps) {
+export default function LocationSearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const previousPathnameRef = useRef(pathname);
   const {
     input,
     setInput,
@@ -27,30 +18,44 @@ export default function JurisdictionAutocomplete({
     setResults,
     loading,
     showResults,
+    setShowResults,
     selectedJurisdiction,
     setSelectedJurisdiction,
     containerRef,
     handleChange,
-    clearSelection,
-    setShowResults
+    clearSelection
   } = useLocationSearch();
 
-  // Mettre à jour l'input si la value change
+  // Clear le champ quand on navigue depuis la page de carte
   useEffect(() => {
-    setInput(value);
-  }, [value, setInput]);
+    const previousPathname = previousPathnameRef.current;
+    
+    // Si on était sur /map et qu'on navigue vers une autre page, clear le champ
+    if (previousPathname === '/map' && pathname !== '/map' && selectedJurisdiction) {
+      clearSelection();
+    }
+    
+    // Mettre à jour le pathname précédent
+    previousPathnameRef.current = pathname;
+  }, [pathname, selectedJurisdiction, clearSelection]);
+
+  // Écouter l'événement de clear depuis la carte
+  useEffect(() => {
+    const handleClearSearch = () => {
+      if (selectedJurisdiction) {
+        clearSelection();
+      }
+    };
+
+    window.addEventListener('clearLocationSearch', handleClearSearch);
+    return () => {
+      window.removeEventListener('clearLocationSearch', handleClearSearch);
+    };
+  }, [clearSelection]);
 
   function selectPlace(place: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const displayName = place.display_name;
-    const shortName = place.address?.city || 
-                     place.address?.town || 
-                     place.address?.village || 
-                     place.address?.county ||
-                     place.address?.state ||
-                     place.address?.region ||
-                     place.address?.country ||
-                     displayName.split(',')[0];
-
+    
     // Créer un format plus joli pour l'affichage
     const formatDisplayName = () => {
       const parts = displayName.split(',');
@@ -72,45 +77,25 @@ export default function JurisdictionAutocomplete({
     setShowResults(false);
     setResults([]);
 
-    // Déterminer le type de juridiction basé sur addresstype
-    let jurisdictionType: Jurisdiction['type'] = 'city';
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
     
-    // D'abord check addresstype
-    if (place.addresstype) {
-      if (['city', 'municipality', 'town', 'village'].includes(place.addresstype)) {
-        jurisdictionType = 'city';
-      } else if (['state', 'region'].includes(place.addresstype)) {
-        jurisdictionType = 'region';
-      } else if (place.addresstype === 'country') {
-        jurisdictionType = 'country';
-      }
+    // Naviguer vers la page de carte avec les coordonnées
+    // Si on est déjà sur la page de carte, faire un zoom adapté
+    if (pathname === '/map') {
+      // Dispatch un événement pour faire un zoom sur la carte
+      window.dispatchEvent(new CustomEvent('zoomToLocation', {
+        detail: {
+          lat,
+          lng: lon,
+          zoom: 12,
+          name: place.display_name
+        }
+      }));
     } else {
-      // Fallback basé sur l'adresse
-      if (place.address?.country && !place.address?.state) {
-        jurisdictionType = 'country';
-      } else if (place.address?.state || place.address?.region) {
-        jurisdictionType = 'region';
-      } else if (place.address?.city || place.address?.municipality || place.address?.town || place.address?.village) {
-        jurisdictionType = 'city';
-      } else {
-        jurisdictionType = 'city'; // fallback par défaut
-      }
+      // Sinon, naviguer vers la page de carte
+      router.push(`/map?lat=${lat}&lng=${lon}&zoom=12&name=${encodeURIComponent(place.display_name)}`);
     }
-
-    // Créer l'objet jurisdiction
-    const jurisdiction: Omit<Jurisdiction, 'id' | 'created_at' | 'updated_at'> = {
-      name: shortName,
-      country_code: place.address?.country?.substring(0, 2).toUpperCase() || '',
-      country: place.address?.country || '',
-      region: place.address?.state || place.address?.region || '',
-      latitude: parseFloat(place.lat),
-      longitude: parseFloat(place.lon),
-      osm_id: parseInt(place.osm_id),
-      osm_type: place.osm_type,
-      type: jurisdictionType
-    };
-
-    onSelect(jurisdiction);
   }
 
   // Fonction pour gérer le focus - ne réafficher les suggestions que si on n'a pas de lieu sélectionné
@@ -140,22 +125,20 @@ export default function JurisdictionAutocomplete({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full max-w-md">
       <div className="relative">
         <Input
           value={input}
           onChange={handleChange}
-          placeholder={placeholder}
-          disabled={disabled}
+          placeholder="Rechercher un lieu..."
           className={`pr-10 ${selectedJurisdiction ? 'bg-blue-50 border-blue-200' : ''}`}
           onFocus={handleFocus}
           onClick={handleInputClick}
         />
         
-        {/* Icône de chargement ou bouton clear */}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           {loading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
           ) : selectedJurisdiction ? (
             <Button
               type="button"
@@ -167,7 +150,7 @@ export default function JurisdictionAutocomplete({
               <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
             </Button>
           ) : (
-            <MapPin className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-gray-400" />
           )}
         </div>
       </div>
