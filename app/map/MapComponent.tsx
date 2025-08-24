@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import MapEvents from './MapEvents';
 import MarkerCluster from './MarkerCluster';
+import FallbackMarkers from './FallbackMarkers';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { createClient } from '@/lib/supabase/client';
@@ -83,6 +84,7 @@ export default function MapComponent({
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
+  const [clusteringAvailable, setClusteringAvailable] = useState(true);
 
   const mapRef = useRef<L.Map | null>(null);
   const supabase = createClient();
@@ -363,12 +365,22 @@ export default function MapComponent({
           <MapCenter lat={initialLat} lng={initialLng} />
           <MapEvents onMapMove={handleMapMove} />
           
-          <MarkerCluster
-            initiatives={initiatives}
-            onMarkerClick={setSelectedInitiative}
-            getStatusColor={getStatusColor}
-            getStatusText={getStatusText}
-          />
+          {clusteringAvailable ? (
+            <MarkerCluster
+              initiatives={initiatives}
+              onMarkerClick={setSelectedInitiative}
+              getStatusColor={getStatusColor}
+              getStatusText={getStatusText}
+              onError={() => setClusteringAvailable(false)}
+            />
+          ) : (
+            <FallbackMarkers
+              initiatives={initiatives}
+              onMarkerClick={setSelectedInitiative}
+              getStatusColor={getStatusColor}
+              getStatusText={getStatusText}
+            />
+          )}
         </MapContainer>
       </div>
     </div>

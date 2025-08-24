@@ -11,7 +11,11 @@ import '@/styles/marker-cluster.css';
 // Import dynamique de MarkerClusterGroup
 let MarkerClusterGroup: any = null;
 if (typeof window !== 'undefined') {
-  MarkerClusterGroup = require('leaflet.markercluster').MarkerClusterGroup;
+  try {
+    MarkerClusterGroup = require('leaflet.markercluster').MarkerClusterGroup;
+  } catch (error) {
+    console.warn('MarkerClusterGroup not available:', error);
+  }
 }
 
 interface Initiative {
@@ -52,19 +56,25 @@ interface MarkerClusterProps {
   onMarkerClick: (initiative: Initiative) => void;
   getStatusColor: (status: string) => string;
   getStatusText: (status: string) => string;
+  onError?: () => void;
 }
 
 export default function MarkerCluster({ 
   initiatives, 
   onMarkerClick, 
   getStatusColor, 
-  getStatusText 
+  getStatusText,
+  onError
 }: MarkerClusterProps) {
   const map = useMap();
   const clusterGroupRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!MarkerClusterGroup || !map) return;
+    if (!MarkerClusterGroup || !map) {
+      console.warn('MarkerClusterGroup or map not available');
+      if (onError) onError();
+      return;
+    }
 
     // Créer le groupe de clustering
     const clusterGroup = new MarkerClusterGroup({

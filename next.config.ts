@@ -3,6 +3,23 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  webpack: (config, { isServer }) => {
+    // Configuration pour Leaflet et les marqueurs de clustering
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
+    return config;
+  },
+  // Désactiver l'optimisation des images pour éviter les problèmes avec Leaflet
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
