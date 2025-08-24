@@ -9,7 +9,9 @@
     "lint": "next lint",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org natspark --project javascript-nextjs .next && sentry-cli sourcemaps upload --org natspark --project javascript-nextjs .next",
     "check-data": "node scripts/check-data.js",
-    "seed-data": "node scripts/seed-data.js"
+    "seed-data": "node scripts/seed-data.js",
+    "test-map": "node scripts/test-map.js",
+    "verify-map": "node scripts/verify-map-build.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

@@ -263,8 +263,8 @@ export default function MapComponent({
   return (
     <div className="flex h-full md:flex-row flex-col">
       {/* Liste des initiatives */}
-      <div className="w-full md:w-96 bg-white border-r overflow-y-auto md:h-full h-40">
-        <div className="p-4 border-b">
+      <div className="w-full md:w-96 bg-white border-r overflow-y-auto md:h-full h-40 flex-shrink-0">
+        <div className="p-4 border-b flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {locationName ? `Initiatives à ${locationName}` : 'Initiatives'}
           </h2>
@@ -277,7 +277,7 @@ export default function MapComponent({
           )}
         </div>
         
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto">
           {initiatives.length === 0 && !loading ? (
             <div className="text-center py-8">
               <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -347,7 +347,7 @@ export default function MapComponent({
       </div>
 
       {/* Carte */}
-      <div className="flex-1 h-full md:h-full h-60">
+      <div className="flex-1 h-full md:h-full h-60 flex-grow">
         <MapContainer
           center={[initialLat, initialLng]}
           zoom={initialZoom}

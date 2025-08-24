@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 const MapComponent = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-[calc(100vh-64px)]">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Chargement de la carte...</p>
@@ -65,7 +65,7 @@ export default function MapPageClient({ searchParams, initialInitiatives }: MapP
   const name = searchParams.name ? decodeURIComponent(searchParams.name) : '';
 
   return (
-    <div className="h-screen relative">
+    <div className="h-[calc(100vh-64px)] relative">
       <Suspense fallback={
         <div className="flex items-center justify-center h-full">
           <div className="text-center">

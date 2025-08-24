@@ -82,7 +82,7 @@ export default function MarkerCluster({
       maxClusterRadius: 50,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
+      zoomToBoundsOnClick: false, // Désactiver le zoom automatique pour permettre le popup
       disableClusteringAtZoom: 16, // Désactiver le clustering au zoom 16+
       iconCreateFunction: function(cluster: any) {
         const count = cluster.getChildCount();
@@ -104,66 +104,23 @@ export default function MarkerCluster({
       }
     });
 
-    // Grouper les initiatives par coordonnées pour gérer les doublons
-    const initiativesByLocation = new Map<string, Initiative[]>();
-    
-    initiatives.forEach((initiative) => {
-      if (!initiative.jurisdiction) return;
+    // Ajouter un gestionnaire d'événement pour les clusters
+    clusterGroup.on('clusterclick', function(e: any) {
+      const cluster = e.layer;
+      const markers = cluster.getAllChildMarkers();
       
-      const key = `${initiative.jurisdiction.latitude},${initiative.jurisdiction.longitude}`;
-      if (!initiativesByLocation.has(key)) {
-        initiativesByLocation.set(key, []);
-      }
-      initiativesByLocation.get(key)!.push(initiative);
-    });
-
-    // Ajouter les marqueurs au groupe
-    initiativesByLocation.forEach((initiativesAtLocation, locationKey) => {
-      const [lat, lng] = locationKey.split(',').map(Number);
-      
-      if (initiativesAtLocation.length === 1) {
-        // Un seul marqueur à cet endroit
-        const initiative = initiativesAtLocation[0];
-        const marker = L.marker([lat, lng]);
+      if (markers.length > 1) {
+        // Créer un popup avec toutes les initiatives du cluster
+        const initiativesInCluster = markers.map((marker: any) => marker.initiative).filter(Boolean);
+        const firstInitiative = initiativesInCluster[0];
         
-        // Créer le contenu du popup
-        const popupContent = `
-          <div class="p-2 min-w-[200px]">
-            <h3 class="font-semibold text-sm mb-1">${initiative.title}</h3>
-            ${initiative.description ? `
-              <p class="text-xs text-gray-600 mb-2 line-clamp-2">
-                ${initiative.description}
-              </p>
-            ` : ''}
-            <div class="flex items-center gap-2">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(initiative.status || '')}">
-                ${getStatusText(initiative.status || '')}
-              </span>
-              <button 
-                onclick="window.openInitiativeDetails('${initiative.id}')"
-                class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Voir détails
-              </button>
-            </div>
-          </div>
-        `;
-
-        marker.bindPopup(popupContent);
-        marker.on('click', () => onMarkerClick(initiative));
-        clusterGroup.addLayer(marker);
-      } else {
-        // Plusieurs initiatives au même endroit - créer un marqueur avec popup multiple
-        const marker = L.marker([lat, lng]);
-        
-        // Créer un popup avec toutes les initiatives
         const popupContent = `
           <div class="p-2 min-w-[250px] max-h-[300px] overflow-y-auto">
             <h3 class="font-semibold text-sm mb-2 text-center border-b pb-2">
-              ${initiativesAtLocation.length} initiative${initiativesAtLocation.length > 1 ? 's' : ''} à ${initiativesAtLocation[0].jurisdiction?.name || 'cet endroit'}
+              ${initiativesInCluster.length} initiative${initiativesInCluster.length > 1 ? 's' : ''} dans cette zone
             </h3>
             <div class="space-y-2">
-              ${initiativesAtLocation.map(initiative => `
+              ${initiativesInCluster.map((initiative: Initiative) => `
                 <div class="border-b border-gray-100 pb-2 last:border-b-0">
                   <h4 class="font-medium text-xs mb-1">${initiative.title}</h4>
                   ${initiative.description ? `
@@ -188,10 +145,56 @@ export default function MarkerCluster({
           </div>
         `;
 
-        marker.bindPopup(popupContent);
-        marker.on('click', () => onMarkerClick(initiativesAtLocation[0])); // Sélectionner la première initiative
-        clusterGroup.addLayer(marker);
+        // Créer un popup temporaire sur le cluster
+        const popup = L.popup()
+          .setLatLng(cluster.getLatLng())
+          .setContent(popupContent)
+          .openOn(map);
+        
+        // Empêcher le zoom automatique
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
       }
+    });
+
+    // Ajouter tous les marqueurs individuellement pour permettre le clustering automatique
+    initiatives.forEach((initiative) => {
+      if (!initiative.jurisdiction) return;
+
+      const marker = L.marker([
+        initiative.jurisdiction.latitude, 
+        initiative.jurisdiction.longitude
+      ]);
+
+      // Créer le contenu du popup
+      const popupContent = `
+        <div class="p-2 min-w-[200px]">
+          <h3 class="font-semibold text-sm mb-1">${initiative.title}</h3>
+          ${initiative.description ? `
+            <p class="text-xs text-gray-600 mb-2 line-clamp-2">
+              ${initiative.description}
+            </p>
+          ` : ''}
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(initiative.status || '')}">
+              ${getStatusText(initiative.status || '')}
+            </span>
+            <button 
+              onclick="window.openInitiativeDetails('${initiative.id}')"
+              class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Voir détails
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Stocker l'initiative dans le marqueur pour pouvoir la récupérer plus tard
+      (marker as any).initiative = initiative;
+      
+      marker.bindPopup(popupContent);
+      marker.on('click', () => onMarkerClick(initiative));
+      clusterGroup.addLayer(marker);
     });
 
     // Ajouter le groupe à la carte
