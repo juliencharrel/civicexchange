@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // Configuration pour forcer le rendu dynamique des pages avec authentification
+  experimental: {
+    // Forcer le rendu dynamique pour éviter les erreurs de cookies
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  },
 };
 
 export default withSentryConfig(nextConfig, {

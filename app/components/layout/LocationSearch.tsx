@@ -51,7 +51,7 @@ export default function LocationSearch() {
     return () => {
       window.removeEventListener('clearLocationSearch', handleClearSearch);
     };
-  }, [clearSelection]);
+  }, [clearSelection, selectedJurisdiction]);
 
   function selectPlace(place: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const displayName = place.display_name;

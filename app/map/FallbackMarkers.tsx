@@ -3,52 +3,17 @@ import { Marker, Popup } from 'react-leaflet';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
-interface Initiative {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  status?: 'planned' | 'ongoing' | 'completed' | 'cancelled';
-  organizing_body?: string;
-  start_date?: string;
-  end_date?: string;
-  objectives?: string;
-  outcomes?: string;
-  links?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-  votes_count?: number;
-  user_id: string;
-  details?: string;
-  tags?: string[];
-  jurisdiction_id: number;
-  jurisdiction?: {
-    id: string;
-    name: string;
-    country_code: string;
-    country: string;
-    region?: string;
-    latitude: number;
-    longitude: number;
-    osm_id: number;
-    osm_type: string;
-    type: 'city' | 'region' | 'country';
-  };
-}
+import type { Initiative } from '@/types/database';
+import { getStatusColor, getStatusText } from '@/lib/initiative-utils';
 
 interface FallbackMarkersProps {
   initiatives: Initiative[];
   onMarkerClick: (initiative: Initiative) => void;
-  getStatusColor: (status: string) => string;
-  getStatusText: (status: string) => string;
 }
 
 export default function FallbackMarkers({ 
   initiatives, 
-  onMarkerClick, 
-  getStatusColor, 
-  getStatusText 
+  onMarkerClick
 }: FallbackMarkersProps) {
   // Grouper les initiatives par coordonnées pour éviter les doublons
   const initiativesByLocation = new Map<string, Initiative[]>();

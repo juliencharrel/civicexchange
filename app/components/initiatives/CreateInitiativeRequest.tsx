@@ -26,7 +26,7 @@ import {
 import { Badge } from "../ui/badge";
 import { MapPin, Plus, Loader2 } from "lucide-react";
 import JurisdictionAutocomplete from "../forms/JurisdictionAutocomplete";
-import type { Jurisdiction } from "../../types/initiative";
+import type { Jurisdiction } from "../../types/database";
 
 const supabase = createClient();
 
@@ -218,7 +218,7 @@ export default function CreateInitiativeRequest({
                           form.setValue("jurisdiction_longitude", jurisdiction.longitude);
                           form.setValue("jurisdiction_osm_id", jurisdiction.osm_id);
                           form.setValue("jurisdiction_osm_type", jurisdiction.osm_type);
-                          form.setValue("jurisdiction_type", jurisdiction.type);
+                          form.setValue("jurisdiction_type", jurisdiction.type as 'city' | 'region' | 'country');
                         }}
                         value={selectedJurisdiction?.name || ''}
                         placeholder="Sélectionnez une nouvelle juridiction..."

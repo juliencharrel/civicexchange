@@ -7,12 +7,10 @@ import FallbackMarkers from './FallbackMarkers';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { createClient } from '@/lib/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MapPin, Users } from 'lucide-react';
-import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import InitiativeCard from '@/components/shared/InitiativeCard';
+import type { Initiative } from '@/types/database';
 
 // Fix pour les icônes Leaflet
 // @ts-expect-error - Leaflet icon fix
@@ -22,39 +20,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
-interface Initiative {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  status?: 'planned' | 'ongoing' | 'completed' | 'cancelled';
-  organizing_body?: string;
-  start_date?: string;
-  end_date?: string;
-  objectives?: string;
-  outcomes?: string;
-  links?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-  votes_count?: number;
-  user_id: string;
-  details?: string;
-  tags?: string[];
-  jurisdiction_id: number;
-  jurisdiction?: {
-    id: string;
-    name: string;
-    country_code: string;
-    country: string;
-    region?: string;
-    latitude: number;
-    longitude: number;
-    osm_id: number;
-    osm_type: string;
-    type: 'city' | 'region' | 'country';
-  };
-}
 
 interface MapComponentProps {
   initialLat: number;
@@ -100,6 +65,8 @@ export default function MapComponent({
   const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
   const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
   const isSearchingRef = useRef(false);
+  
+
 
   // Fonction pour récupérer les initiatives dans les bounds
   const fetchInitiativesInBounds = useCallback(async (bounds: L.LatLngBounds) => {
@@ -123,7 +90,8 @@ export default function MapComponent({
         .from('initiatives')
         .select(`
           *,
-          jurisdiction:jurisdictions!inner(*)
+          jurisdiction:jurisdictions!inner(*),
+          category:initiative_categories(*)
         `)
         .gte('jurisdiction.latitude', bounds.getSouth())
         .lte('jurisdiction.latitude', bounds.getNorth())
@@ -159,10 +127,10 @@ export default function MapComponent({
 
   // Initialisation au montage du composant
   useEffect(() => {
-    // Si on a déjà des initiatives initiales du serveur, ne pas charger
+    // Si on a déjà des initiatives initiales du serveur, les utiliser
     if (initialInitiatives && initialInitiatives.length > 0) {
       console.log('✅ Utilisation des initiatives initiales du serveur');
-      return;
+      setInitiatives(initialInitiatives);
     }
     
     // Charger les initiatives initiales après que la carte soit prête
@@ -190,6 +158,16 @@ export default function MapComponent({
         
         const newURL = `/map?${params.toString()}`;
         router.replace(newURL, { scroll: false });
+        
+        // Recharger les initiatives pour la nouvelle localisation
+        setTimeout(() => {
+          if (mapRef.current) {
+            const bounds = mapRef.current.getBounds();
+            // Forcer le rechargement en réinitialisant lastBoundsRef
+            lastBoundsRef.current = null;
+            fetchInitiativesInBounds(bounds);
+          }
+        }, 500); // Attendre que la carte soit stabilisée
       }
     };
 
@@ -264,30 +242,12 @@ export default function MapComponent({
     clearHeaderSearch();
   }, [fetchInitiativesInBounds, updateURL, clearHeaderSearch]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'planned': return 'bg-blue-100 text-blue-800';
-      case 'ongoing': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'planned': return 'Planifié';
-      case 'ongoing': return 'En cours';
-      case 'completed': return 'Terminé';
-      case 'cancelled': return 'Annulé';
-      default: return 'Inconnu';
-    }
-  };
 
   return (
     <div className="flex h-full md:flex-row flex-col">
       {/* Liste des initiatives */}
-      <div className="w-full md:w-96 bg-white border-r overflow-y-auto md:h-full h-40 flex-shrink-0">
+      <div className="w-full md:w-[500px] bg-white border-r overflow-y-auto md:h-full h-40 flex-shrink-0">
         <div className="p-4 border-b flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {locationName ? `Initiatives à ${locationName}` : 'Initiatives'}
@@ -309,62 +269,17 @@ export default function MapComponent({
             </div>
           ) : (
             initiatives.map((initiative: Initiative) => (
-              <Card 
-                key={initiative.id} 
-                className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 ${
-                  selectedInitiative?.id === initiative.id ? 'ring-2 ring-blue-500' : ''
-                }`}
+              <div
+                key={initiative.id}
+                className={selectedInitiative?.id === initiative.id ? 'ring-2 ring-blue-500 rounded-lg' : ''}
                 onClick={() => setSelectedInitiative(initiative)}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-sm font-medium line-clamp-2">
-                      {initiative.title}
-                    </CardTitle>
-                    {initiative.status && (
-                      <Badge className={`text-xs ${getStatusColor(initiative.status)}`}>
-                        {getStatusText(initiative.status)}
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  {initiative.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                      {initiative.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    {initiative.jurisdiction && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>{initiative.jurisdiction.name}</span>
-                      </div>
-                    )}
-                    
-                    {initiative.votes_count !== undefined && (
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        <span>{initiative.votes_count}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-xs"
-                      asChild
-                    >
-                      <Link href={`/initiatives/${initiative.id}`}>
-                        Voir détails
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                <InitiativeCard
+                  initiative={initiative}
+                  variant="default"
+                  className="mb-0"
+                />
+              </div>
             ))
           )}
         </div>
@@ -407,16 +322,12 @@ export default function MapComponent({
             <MarkerCluster
               initiatives={initiatives}
               onMarkerClick={setSelectedInitiative}
-              getStatusColor={getStatusColor}
-              getStatusText={getStatusText}
               onError={() => setClusteringAvailable(false)}
             />
           ) : (
             <FallbackMarkers
               initiatives={initiatives}
               onMarkerClick={setSelectedInitiative}
-              getStatusColor={getStatusColor}
-              getStatusText={getStatusText}
             />
           )}
         </MapContainer>

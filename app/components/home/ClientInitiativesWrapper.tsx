@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "../../../lib/supabase/client";
-import InitiativeCard from "./InitiativeCard";
-import type { Initiative } from "../../types/initiative";
+import InitiativeCard from "../shared/InitiativeCard";
+import type { Initiative } from "../../types/database";
 import { useAuth } from "../../contexts/AuthContext";
 
 const supabase = createClient();
@@ -46,9 +46,10 @@ export default function ClientInitiativesWrapper({
               {initiatives.map((initiative) => (
           <InitiativeCard
             key={initiative.id}
-            {...initiative}
+            initiative={initiative}
             userHasVoted={userVotes.includes(initiative.id)}
             requestCount={requestCountMap.get(initiative.id) || 0}
+            variant="default"
           />
         ))}
     </>

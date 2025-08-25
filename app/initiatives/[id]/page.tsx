@@ -1,7 +1,10 @@
 import { createClient } from "../../../lib/supabase/server";
 import { notFound } from "next/navigation";
 import InitiativeDetailsClient from "./InitiativeDetailsClient";
-import type { Initiative, Jurisdiction } from "../../types/initiative";
+import type { Initiative, Jurisdiction } from "../../types/database";
+
+// Forcer le rendu dynamique pour éviter les erreurs de cookies
+export const dynamic = 'force-dynamic';
 
 type InitiativeWithDetails = Initiative & {
   author: {

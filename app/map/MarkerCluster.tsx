@@ -7,6 +7,8 @@ import L from 'leaflet';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import '@/styles/marker-cluster.css';
+import type { Initiative } from '@/types/database';
+import { getStatusColor, getStatusText } from '@/lib/initiative-utils';
 
 // Import dynamique de MarkerClusterGroup
 let MarkerClusterGroup: any = null;
@@ -18,52 +20,15 @@ if (typeof window !== 'undefined') {
   }
 }
 
-interface Initiative {
-  id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  status?: 'planned' | 'ongoing' | 'completed' | 'cancelled';
-  organizing_body?: string;
-  start_date?: string;
-  end_date?: string;
-  objectives?: string;
-  outcomes?: string;
-  links?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-  votes_count?: number;
-  user_id: string;
-  details?: string;
-  tags?: string[];
-  jurisdiction_id: number;
-  jurisdiction?: {
-    id: string;
-    name: string;
-    country_code: string;
-    country: string;
-    region?: string;
-    latitude: number;
-    longitude: number;
-    osm_id: number;
-    osm_type: string;
-    type: 'city' | 'region' | 'country';
-  };
-}
-
 interface MarkerClusterProps {
   initiatives: Initiative[];
   onMarkerClick: (initiative: Initiative) => void;
-  getStatusColor: (status: string) => string;
-  getStatusText: (status: string) => string;
   onError?: () => void;
 }
 
 export default function MarkerCluster({ 
   initiatives, 
   onMarkerClick, 
-  getStatusColor, 
-  getStatusText,
   onError
 }: MarkerClusterProps) {
   const map = useMap();
@@ -212,7 +177,7 @@ export default function MarkerCluster({
       }
       delete (window as any).openInitiativeDetails;
     };
-  }, [initiatives, map, onMarkerClick, getStatusColor, getStatusText, onError]);
+  }, [initiatives, map, onMarkerClick, onError]);
 
   return null;
 }

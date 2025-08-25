@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "../../components/ui/separator";
 import { Calendar, User as UserIcon, ThumbsUp, Edit, ArrowLeft, Globe, Building, Target, Award, Link, MapPin, Tag, Users } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-import type { Initiative, Jurisdiction } from "@/types/initiative";
+import type { Initiative, Jurisdiction } from "@/types/database";
 import InitiativeRequestsDisplay from "../../components/initiatives/InitiativeRequestsDisplay";
 import CreateInitiativeRequest from "../../components/initiatives/CreateInitiativeRequest";
 import RequestDetailsDialog from "../../components/initiatives/RequestDetailsDialog";
@@ -285,7 +285,7 @@ export default function InitiativeDetailsClient({
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-gray-500" />
                 <span className="text-sm font-medium">Catégorie:</span>
-                <Badge variant="outline">{initiative.category}</Badge>
+                <Badge variant="outline">{initiative.category?.name || initiative.category_name}</Badge>
               </div>
             )}
             

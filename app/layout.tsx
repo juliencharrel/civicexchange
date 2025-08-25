@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { createClient } from "../lib/supabase/server";
 import Header from "./components/layout/Header";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CategoriesProvider } from "./contexts/CategoriesContext";
 import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
@@ -26,9 +27,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user ?? null;
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data?.user ?? null;
+  } catch (error) {
+    console.log('Erreur lors de la récupération de l\'utilisateur:', error);
+    user = null;
+  }
 
   return (
     <html lang="en">
@@ -36,10 +43,12 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider initialUser={user}>
-          <Header />
-          <main className="pt-16">
-            {children}
-          </main>
+          <CategoriesProvider>
+            <Header />
+            <main className="pt-16">
+              {children}
+            </main>
+          </CategoriesProvider>
         </AuthProvider>
         <Analytics />
       </body>

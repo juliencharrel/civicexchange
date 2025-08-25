@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import MapPageClient from './MapPageClient';
 
+// Forcer le rendu dynamique pour éviter les erreurs de cookies
+export const dynamic = 'force-dynamic';
+
 interface MapPageProps {
   searchParams: Promise<{
     lat?: string;
@@ -31,7 +34,8 @@ export default async function MapPage({ searchParams }: MapPageProps) {
       .from('initiatives')
       .select(`
         *,
-        jurisdiction:jurisdictions!inner(*)
+        jurisdiction:jurisdictions!inner(*),
+        category:initiative_categories(*)
       `)
       .gte('jurisdiction.latitude', lat - latDelta)
       .lte('jurisdiction.latitude', lat + latDelta)
@@ -69,7 +73,8 @@ export default async function MapPage({ searchParams }: MapPageProps) {
           .from('initiatives')
           .select(`
             *,
-            jurisdiction:jurisdictions!inner(*)
+            jurisdiction:jurisdictions!inner(*),
+            category:initiative_categories(*)
           `)
           .gte('jurisdiction.latitude', lat - latDelta)
           .lte('jurisdiction.latitude', lat + latDelta)

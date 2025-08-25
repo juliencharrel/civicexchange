@@ -9,6 +9,7 @@ export async function updateSession(request: NextRequest) {
   const PUBLIC_ROUTES = [
     '/', // home
     '/initiatives', // listing
+    '/map', // map page
     '/test', // test
     // ajoute d'autres routes publiques ici
   ];

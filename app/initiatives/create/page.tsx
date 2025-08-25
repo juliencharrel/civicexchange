@@ -28,14 +28,15 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn, upsertJurisdiction } from "../../../lib/utils";
 import JurisdictionAutocomplete from "../../components/forms/JurisdictionAutocomplete";
-import type { Jurisdiction } from "../../types/initiative";
+import { CategoryButtons } from "../../components/forms/category-buttons";
+import type { Jurisdiction } from "../../types/database";
 
 const supabase = createClient();
 
 const initiativeSchema = z.object({
   title: z.string().min(2, { message: "Le titre est requis." }),
   description: z.string().optional(),
-  category: z.string().optional(),
+  category_id: z.string().optional(),
   status: z.enum(["planned", "ongoing", "completed", "cancelled"]),
   organizing_body: z.string().optional(),
   start_date: z.date().optional(),
@@ -54,12 +55,13 @@ const initiativeSchema = z.object({
   jurisdiction_longitude: z.number(),
   jurisdiction_osm_id: z.number(),
   jurisdiction_osm_type: z.string(),
-  jurisdiction_type: z.enum(["city", "region", "country"]),
+  jurisdiction_type: z.enum(["city", "region", "country", "municipality", "department", "other"]),
 });
 
 export default function CreateInitiativePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<Omit<Jurisdiction, 'id' | 'created_at' | 'updated_at'> | null>(null);
 
   const form = useForm<z.infer<typeof initiativeSchema>>({
@@ -67,7 +69,7 @@ export default function CreateInitiativePage() {
     defaultValues: {
       title: "",
       description: "",
-      category: "",
+      category_id: "",
       status: "planned",
       organizing_body: "",
       start_date: undefined,
@@ -86,7 +88,7 @@ export default function CreateInitiativePage() {
       jurisdiction_longitude: 0,
       jurisdiction_osm_id: 0,
       jurisdiction_osm_type: "",
-      jurisdiction_type: "city",
+      jurisdiction_type: "city" as const,
     },
   });
 
@@ -105,7 +107,7 @@ export default function CreateInitiativePage() {
         longitude: values.jurisdiction_longitude,
         osm_id: values.jurisdiction_osm_id,
         osm_type: values.jurisdiction_osm_type,
-        type: values.jurisdiction_type,
+        type: values.jurisdiction_type as 'city' | 'region' | 'country',
       });
 
       // 2. Traiter les liens et tags
@@ -132,7 +134,7 @@ export default function CreateInitiativePage() {
         {
           title: values.title,
           description: values.description || null,
-          category: values.category || null,
+          category_id: values.category_id || null,
           status: values.status,
           organizing_body: values.organizing_body || null,
           start_date: start_date ? start_date.toISOString().slice(0, 10) : null,
@@ -193,12 +195,15 @@ export default function CreateInitiativePage() {
           />
           <FormField
             control={form.control}
-            name="category"
+            name="category_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Catégorie</FormLabel>
                 <FormControl>
-                  <Input placeholder="Catégorie" {...field} />
+                  <CategoryButtons
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Sélectionner une catégorie..."
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

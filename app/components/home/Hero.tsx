@@ -1,4 +1,7 @@
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { MapPin, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -9,7 +12,23 @@ export default function Hero() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Partagez vos <span className="text-blue-200">innovations</span> territoriales
           </h1>
-          <p className="mb-6 text-lg">Explorez, documentez et adoptez les meilleures pratiques municipales. Une plateforme d’échange entre élus et représentants territoriaux.</p>
+          <p className="mb-8 text-lg">Explorez, documentez et adoptez les meilleures pratiques municipales. Une plateforme d&apos;échange entre élus et représentants territoriaux.</p>
+          
+          {/* Boutons d'action */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href="/map">
+              <Button 
+                size="lg"
+                className="bg-white text-blue-700 hover:bg-blue-50 border-0 font-semibold px-6 py-3 text-base w-full sm:w-auto"
+              >
+                <MapPin className="h-5 w-5 mr-2" />
+                Voir les initiatives autour de chez moi
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </Link>
+            
+          
+          </div>
         </div>
         <div className="flex-1">
           {/* DashboardCard à insérer ici */}

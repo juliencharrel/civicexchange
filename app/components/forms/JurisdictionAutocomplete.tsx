@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapPin, X } from "lucide-react";
-import type { Jurisdiction } from "@/types/initiative";
+import type { Jurisdiction } from "@/types/database";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import LocationSearchResults from "@/components/shared/LocationSearchResults";
 

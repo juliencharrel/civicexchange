@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '../../lib/supabase/server';
 import ProfileForm from './ProfileForm';
 
+// Forcer le rendu dynamique pour éviter les erreurs de cookies
+export const dynamic = 'force-dynamic';
+
 export default async function ProfilePage() {
   const supabase = await createClient();
 
