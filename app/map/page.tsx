@@ -44,6 +44,46 @@ export default async function MapPage({ searchParams }: MapPageProps) {
     } else {
       initiatives = initiativesData || [];
     }
+  } else {
+    // Si pas de coordonnées dans l'URL, essayer de récupérer la position par IP
+    try {
+      // Récupérer l'IP du client
+      const { headers } = await import('next/headers');
+      const headersList = await headers();
+      const forwarded = headersList.get('x-forwarded-for');
+      const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';
+      
+      // Utiliser un service de géolocalisation par IP (exemple avec ipapi.co)
+      const response = await fetch(`https://ipapi.co/${ip}/json/`);
+      const locationData = await response.json();
+      
+      if (locationData.latitude && locationData.longitude) {
+        const lat = parseFloat(locationData.latitude);
+        const lng = parseFloat(locationData.longitude);
+        
+        // Récupérer les initiatives autour de cette position
+        const latDelta = 0.5; // Zone large pour le chargement initial
+        const lngDelta = 0.5;
+        
+        const { data: initiativesData, error } = await supabase
+          .from('initiatives')
+          .select(`
+            *,
+            jurisdiction:jurisdictions!inner(*)
+          `)
+          .gte('jurisdiction.latitude', lat - latDelta)
+          .lte('jurisdiction.latitude', lat + latDelta)
+          .gte('jurisdiction.longitude', lng - lngDelta)
+          .lte('jurisdiction.longitude', lng + lngDelta)
+          .order('created_at', { ascending: false });
+
+        if (!error) {
+          initiatives = initiativesData || [];
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la géolocalisation par IP:', error);
+    }
   }
 
   return <MapPageClient searchParams={params} initialInitiatives={initiatives} />;
