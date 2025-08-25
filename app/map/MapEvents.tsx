@@ -35,6 +35,8 @@ export default function MapEvents({ onMapMove }: MapEventsProps) {
       if (moveTimeoutRef.current) {
         console.log('🗑️ Timeout précédent annulé');
         clearTimeout(moveTimeoutRef.current);
+        // Réinitialiser isProcessingRef quand on annule un timeout
+        isProcessingRef.current = false;
       }
       
       console.log('⏰ Nouveau timeout programmé (300ms)');
@@ -56,6 +58,7 @@ export default function MapEvents({ onMapMove }: MapEventsProps) {
       if (moveTimeoutRef.current) {
         clearTimeout(moveTimeoutRef.current);
       }
+      isProcessingRef.current = false;
       map.off('moveend', handleMapEvent);
       map.off('zoomend', handleMapEvent);
     };

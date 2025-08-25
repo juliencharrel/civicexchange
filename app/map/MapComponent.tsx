@@ -61,7 +61,7 @@ interface MapComponentProps {
   initialLng: number;
   initialZoom: number;
   locationName: string;
-  initialInitiatives: Initiative[];
+  initialInitiatives?: Initiative[];
 }
 
 // Composant pour centrer la carte
@@ -79,9 +79,10 @@ export default function MapComponent({
   initialLat, 
   initialLng, 
   initialZoom, 
-  locationName
+  locationName,
+  initialInitiatives
 }: MapComponentProps) {
-  const [initiatives, setInitiatives] = useState<Initiative[]>([]);
+  const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives || []);
   const [loading, setLoading] = useState(false);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [clusteringAvailable, setClusteringAvailable] = useState(true);
@@ -97,6 +98,12 @@ export default function MapComponent({
 
   // Initialisation au montage du composant
   useEffect(() => {
+    // Si on a déjà des initiatives initiales du serveur, ne pas charger
+    if (initialInitiatives && initialInitiatives.length > 0) {
+      console.log('✅ Utilisation des initiatives initiales du serveur');
+      return;
+    }
+    
     // Charger les initiatives initiales après que la carte soit prête
     const loadInitialInitiatives = async () => {
       if (!mapRef.current) return;
