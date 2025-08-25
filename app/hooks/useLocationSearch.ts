@@ -23,41 +23,53 @@ interface NominatimPlace {
   lon: string;
 }
 
-// Fonction de filtrage partagée
+// Fonction de filtrage et déduplication partagée
 function filterPlaces(data: NominatimPlace[]): NominatimPlace[] {
-  return data.filter(place => {
+  // 1. Filtrer les types de lieux pertinents
+  const relevantPlaces = data.filter(place => {
+    // Accepter seulement les boundaries et places
     if (place.class !== 'boundary' && place.class !== 'place') return false;
     
-    // Ville
-    if (place.addresstype && ['city', 'municipality', 'town', 'village'].includes(place.addresstype)) {
-      return true;
-    }
-    
-    // Région
-    if (place.addresstype && ['state', 'region'].includes(place.addresstype)) {
-      return true;
-    }
-    
-    // Pays
-    if (place.addresstype === 'country') {
-      return true;
-    }
-    
-    // Sinon fallback : check adresse
-    if (place.address) {
-      if (place.address.city || place.address.municipality || place.address.town || place.address.village) {
-        return true;
-      }
-      if (place.address.state || place.address.region) {
-        return true;
-      }
-      if (place.address.country && !place.address.state) {
-        return true;
-      }
-    }
-
-    return false;
+    // Filtrer sur addresstype pour avoir des résultats cohérents
+    const validTypes = ['city', 'municipality', 'town', 'village', 'state', 'region', 'country', 'suburb'];
+    return place.addresstype && validTypes.includes(place.addresstype);
   });
+
+  // 2. Filtrer les suburb si on a une vraie ville avec le même nom
+  const cityNames = new Set(
+    relevantPlaces
+      .filter(place => ['city', 'municipality', 'town', 'village'].includes(place.addresstype || ''))
+      .map(place => place.display_name.split(',')[0].trim())
+  );
+
+  const filteredPlaces = relevantPlaces.filter(place => {
+    // Si c'est un suburb, vérifier qu'il n'y a pas une vraie ville avec le même nom
+    if (place.addresstype === 'suburb') {
+      const placeName = place.display_name.split(',')[0].trim();
+      return !cityNames.has(placeName);
+    }
+    return true;
+  });
+
+  // 3. Dédupliquer sur display_name en gardant le plus important (place_rank plus élevé)
+  const deduplicated = filteredPlaces.reduce((acc: Record<string, NominatimPlace>, place: NominatimPlace) => {
+    const key = place.display_name;
+    
+    // Si on n'a pas encore ce display_name, ou si ce lieu a un place_rank plus élevé (plus important)
+    if (!acc[key] || place.place_rank > acc[key].place_rank) {
+      acc[key] = place;
+    }
+    
+    return acc;
+  }, {});
+
+  // 4. Convertir en array et trier par place_rank (plus important en premier)
+  const finalResults = Object.values(deduplicated).sort((a, b) => {
+    // Trier par place_rank décroissant (plus important en premier)
+    return b.place_rank - a.place_rank;
+  });
+
+  return finalResults;
 }
 
 export function useLocationSearch() {
@@ -93,13 +105,13 @@ export function useLocationSearch() {
     // Ne pas mettre showResults à true ici, on le fera après avoir reçu les résultats
 
     try {
-      // Une seule requête large
+      // Requête avec plus de résultats pour avoir plus de choix après déduplication
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
         `q=${encodeURIComponent(text)}&` +
         `format=json&` +
         `addressdetails=1&` +
-        `limit=15&` +
+        `limit=30&` +
         `accept-language=fr,en`
       );
       

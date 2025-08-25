@@ -79,6 +79,8 @@ export default function JurisdictionAutocomplete({
     if (place.addresstype) {
       if (['city', 'municipality', 'town', 'village'].includes(place.addresstype)) {
         jurisdictionType = 'city';
+      } else if (place.addresstype === 'suburb') {
+        jurisdictionType = 'city'; // Les arrondissements sont traités comme des villes
       } else if (['state', 'region'].includes(place.addresstype)) {
         jurisdictionType = 'region';
       } else if (place.addresstype === 'country') {

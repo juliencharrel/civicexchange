@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import MapEvents from './MapEvents';
 import MarkerCluster from './MarkerCluster';
@@ -91,28 +91,22 @@ export default function MapComponent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const updateURLTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const isSearchingRef = useRef(false);
 
   // Initialisation au montage du composant
   useEffect(() => {
-    // Charger les initiatives initiales basées sur les coordonnées de l'URL
+    // Charger les initiatives initiales après que la carte soit prête
     const loadInitialInitiatives = async () => {
-      // Créer des bounds autour des coordonnées initiales
-      const bounds = L.latLngBounds(
-        [initialLat - 0.1, initialLng - 0.1], // Sud-Ouest
-        [initialLat + 0.1, initialLng + 0.1]  // Nord-Est
-      );
+      if (!mapRef.current) return;
+      
+      const bounds = mapRef.current.getBounds();
       await fetchInitiativesInBounds(bounds);
     };
 
-    let timer: NodeJS.Timeout | null = null;
-
-    // Charger immédiatement si on a des coordonnées spécifiques dans l'URL
-    if (searchParams.get('lat') && searchParams.get('lng')) {
-      loadInitialInitiatives();
-    } else {
-      // Sinon, charger après un court délai pour laisser la carte se charger
-      timer = setTimeout(loadInitialInitiatives, 1000);
-    }
+    // Charger après un court délai pour laisser la carte se charger
+    const timer = setTimeout(loadInitialInitiatives, 1000);
 
     // Écouter l'événement de zoom depuis la barre de recherche
     const handleZoomToLocation = (event: CustomEvent) => {
@@ -144,41 +138,34 @@ export default function MapComponent({
     };
   }, [initialLat, initialLng, searchParams, router]);
 
-  // Fonction pour récupérer les initiatives dans les bounds en un seul appel
-  const fetchInitiativesInBounds = async (bounds: L.LatLngBounds) => {
+  // Fonction pour récupérer les initiatives dans les bounds
+  const fetchInitiativesInBounds = useCallback(async (bounds: L.LatLngBounds) => {
+    // Si on est déjà en train de chercher, ignorer
+    if (isSearchingRef.current) {
+      return;
+    }
+    
+    // Vérifier si les bounds ont changé
+    if (lastBoundsRef.current && bounds.equals(lastBoundsRef.current)) {
+      return;
+    }
+    
+    isSearchingRef.current = true;
+    searchStartBoundsRef.current = bounds;
+    
     try {
       setLoading(true);
       
-      // D'abord récupérer les juridictions dans les bounds
-      const { data: jurisdictions, error: jurisdictionsError } = await supabase
-        .from('jurisdictions')
-        .select('id')
-        .gte('latitude', bounds.getSouth())
-        .lte('latitude', bounds.getNorth())
-        .gte('longitude', bounds.getWest())
-        .lte('longitude', bounds.getEast());
-
-      if (jurisdictionsError) {
-        console.error('Erreur lors de la récupération des juridictions:', jurisdictionsError);
-        setInitiatives([]);
-        return;
-      }
-
-      if (!jurisdictions || jurisdictions.length === 0) {
-        setInitiatives([]);
-        return;
-      }
-
-      const jurisdictionIds = jurisdictions.map(j => j.id);
-
-      // Ensuite récupérer les initiatives avec leurs juridictions en un seul appel
       const { data: initiativesData, error: initiativesError } = await supabase
         .from('initiatives')
         .select(`
           *,
-          jurisdiction:jurisdictions(*)
+          jurisdiction:jurisdictions!inner(*)
         `)
-        .in('jurisdiction_id', jurisdictionIds)
+        .gte('jurisdiction.latitude', bounds.getSouth())
+        .lte('jurisdiction.latitude', bounds.getNorth())
+        .gte('jurisdiction.longitude', bounds.getWest())
+        .lte('jurisdiction.longitude', bounds.getEast())
         .order('created_at', { ascending: false });
 
       if (initiativesError) {
@@ -187,17 +174,28 @@ export default function MapComponent({
         return;
       }
 
+      // Vérifier si la position a changé pendant la recherche
+      if (mapRef.current && searchStartBoundsRef.current) {
+        const currentBounds = mapRef.current.getBounds();
+        if (!currentBounds.equals(searchStartBoundsRef.current)) {
+          // La position a changé, annuler cette recherche
+          return;
+        }
+      }
+      
+      lastBoundsRef.current = bounds;
       setInitiatives(initiativesData || []);
     } catch (error) {
       console.error('Erreur lors de la récupération des initiatives:', error);
       setInitiatives([]);
     } finally {
       setLoading(false);
+      isSearchingRef.current = false;
     }
-  };
+  }, [supabase]);
 
   // Fonction pour mettre à jour l'URL avec les coordonnées actuelles (avec debounce)
-  const updateURL = (lat: number, lng: number, zoom: number) => {
+  const updateURL = useCallback((lat: number, lng: number, zoom: number) => {
     // Clear le timeout précédent
     if (updateURLTimeoutRef.current) {
       clearTimeout(updateURLTimeoutRef.current);
@@ -216,29 +214,43 @@ export default function MapComponent({
       const newURL = `/map?${params.toString()}`;
       router.replace(newURL, { scroll: false });
     }, 300); // Réduit à 300ms pour une meilleure réactivité
-  };
+  }, [searchParams, router]);
 
   // Fonction pour clear la barre de recherche dans le header
-  const clearHeaderSearch = () => {
+  const clearHeaderSearch = useCallback(() => {
     // Dispatch un événement personnalisé pour clear la recherche
     window.dispatchEvent(new CustomEvent('clearLocationSearch'));
-  };
+  }, []);
+
+
 
   // Fonction pour gérer le changement de vue de la carte
-  const handleMapMove = () => {
+  const handleMapMove = useCallback(() => {
     if (!mapRef.current) return;
     
     const bounds = mapRef.current.getBounds();
+    
+    // Si on est déjà en train de chercher, ignorer
+    if (isSearchingRef.current) {
+      return;
+    }
+    
+    // Vérifier si les bounds ont changé
+    if (lastBoundsRef.current && bounds.equals(lastBoundsRef.current)) {
+      return;
+    }
+    
+    // Lancer la recherche
     fetchInitiativesInBounds(bounds);
     
-    // Mettre à jour l'URL avec les coordonnées actuelles
+    // Mettre à jour l'URL
     const center = mapRef.current.getCenter();
     const zoom = mapRef.current.getZoom();
     updateURL(center.lat, center.lng, zoom);
     
-    // Clear la barre de recherche quand on navigue
+    // Clear la barre de recherche
     clearHeaderSearch();
-  };
+  }, [fetchInitiativesInBounds, updateURL, clearHeaderSearch]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -347,10 +359,24 @@ export default function MapComponent({
       </div>
 
       {/* Carte */}
-      <div className="flex-1 h-full md:h-full h-60 flex-grow">
+      <div className="flex-1 h-full md:h-full h-60 flex-grow relative">
+        {/* Indicateur de chargement sur la carte */}
+        {loading && (
+          <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-md px-3 py-2">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+              <span className="text-sm text-gray-700">Chargement des initiatives...</span>
+            </div>
+          </div>
+        )}
+        
         <MapContainer
           center={[initialLat, initialLng]}
           zoom={initialZoom}
+          minZoom={3}
+          maxZoom={18}
+          maxBounds={[[-85, -180], [85, 180]]}
+          maxBoundsViscosity={1.0}
           className="h-full w-full [&_.leaflet-popup-content]:m-2 [&_.leaflet-popup-content]:min-w-[200px] [&_.leaflet-popup-content-wrapper]:rounded-lg"
           ref={mapRef}
           whenReady={() => {

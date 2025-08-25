@@ -66,6 +66,8 @@ export default function LocationSearchResults({
                       if (place.addresstype) {
                         if (['city', 'municipality', 'town', 'village'].includes(place.addresstype)) {
                           return 'city';
+                        } else if (place.addresstype === 'suburb') {
+                          return 'arrondissement';
                         } else if (['state', 'region'].includes(place.addresstype)) {
                           return 'region';
                         } else if (place.addresstype === 'country') {
