@@ -64,12 +64,17 @@ interface MapComponentProps {
   initialInitiatives?: Initiative[];
 }
 
-// Composant pour centrer la carte
+// Composant pour centrer la carte (une seule fois à l'initialisation)
 function MapCenter({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
+  const hasCenteredRef = useRef(false);
   
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
+    // Ne centrer qu'une seule fois à l'initialisation
+    if (!hasCenteredRef.current) {
+      map.setView([lat, lng], map.getZoom());
+      hasCenteredRef.current = true;
+    }
   }, [lat, lng, map]);
   
   return null;
@@ -95,55 +100,6 @@ export default function MapComponent({
   const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
   const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
   const isSearchingRef = useRef(false);
-
-  // Initialisation au montage du composant
-  useEffect(() => {
-    // Si on a déjà des initiatives initiales du serveur, ne pas charger
-    if (initialInitiatives && initialInitiatives.length > 0) {
-      console.log('✅ Utilisation des initiatives initiales du serveur');
-      return;
-    }
-    
-    // Charger les initiatives initiales après que la carte soit prête
-    const loadInitialInitiatives = async () => {
-      if (!mapRef.current) return;
-      
-      const bounds = mapRef.current.getBounds();
-      await fetchInitiativesInBounds(bounds);
-    };
-
-    // Charger après un court délai pour laisser la carte se charger
-    const timer = setTimeout(loadInitialInitiatives, 1000);
-
-    // Écouter l'événement de zoom depuis la barre de recherche
-    const handleZoomToLocation = (event: CustomEvent) => {
-      if (mapRef.current) {
-        const { lat, lng, zoom } = event.detail;
-        mapRef.current.setView([lat, lng], zoom);
-        
-        // Mettre à jour l'URL immédiatement quand on zoome depuis la recherche
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('lat', lat.toString());
-        params.set('lng', lng.toString());
-        params.set('zoom', zoom.toString());
-        
-        const newURL = `/map?${params.toString()}`;
-        router.replace(newURL, { scroll: false });
-      }
-    };
-
-    window.addEventListener('zoomToLocation', handleZoomToLocation as EventListener);
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      if (updateURLTimeoutRef.current) {
-        clearTimeout(updateURLTimeoutRef.current);
-      }
-      window.removeEventListener('zoomToLocation', handleZoomToLocation as EventListener);
-    };
-  }, [initialLat, initialLng, searchParams, router]);
 
   // Fonction pour récupérer les initiatives dans les bounds
   const fetchInitiativesInBounds = useCallback(async (bounds: L.LatLngBounds) => {
@@ -200,6 +156,55 @@ export default function MapComponent({
       isSearchingRef.current = false;
     }
   }, [supabase]);
+
+  // Initialisation au montage du composant
+  useEffect(() => {
+    // Si on a déjà des initiatives initiales du serveur, ne pas charger
+    if (initialInitiatives && initialInitiatives.length > 0) {
+      console.log('✅ Utilisation des initiatives initiales du serveur');
+      return;
+    }
+    
+    // Charger les initiatives initiales après que la carte soit prête
+    const loadInitialInitiatives = async () => {
+      if (!mapRef.current) return;
+      
+      const bounds = mapRef.current.getBounds();
+      await fetchInitiativesInBounds(bounds);
+    };
+
+    // Charger après un court délai pour laisser la carte se charger
+    const timer = setTimeout(loadInitialInitiatives, 1000);
+
+    // Écouter l'événement de zoom depuis la barre de recherche
+    const handleZoomToLocation = (event: CustomEvent) => {
+      if (mapRef.current) {
+        const { lat, lng, zoom } = event.detail;
+        mapRef.current.setView([lat, lng], zoom);
+        
+        // Mettre à jour l'URL immédiatement quand on zoome depuis la recherche
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('lat', lat.toString());
+        params.set('lng', lng.toString());
+        params.set('zoom', zoom.toString());
+        
+        const newURL = `/map?${params.toString()}`;
+        router.replace(newURL, { scroll: false });
+      }
+    };
+
+    window.addEventListener('zoomToLocation', handleZoomToLocation as EventListener);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      if (updateURLTimeoutRef.current) {
+        clearTimeout(updateURLTimeoutRef.current);
+      }
+      window.removeEventListener('zoomToLocation', handleZoomToLocation as EventListener);
+    };
+  }, [initialLat, initialLng, searchParams, router, initialInitiatives, fetchInitiativesInBounds]);
 
   // Fonction pour mettre à jour l'URL avec les coordonnées actuelles (avec debounce)
   const updateURL = useCallback((lat: number, lng: number, zoom: number) => {

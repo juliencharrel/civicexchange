@@ -112,7 +112,6 @@ export default function MarkerCluster({
       if (markers.length > 1) {
         // Créer un popup avec toutes les initiatives du cluster
         const initiativesInCluster = markers.map((marker: any) => marker.initiative).filter(Boolean);
-        const firstInitiative = initiativesInCluster[0];
         
         const popupContent = `
           <div class="p-2 min-w-[250px] max-h-[300px] overflow-y-auto">
@@ -146,7 +145,7 @@ export default function MarkerCluster({
         `;
 
         // Créer un popup temporaire sur le cluster
-        const popup = L.popup()
+        L.popup()
           .setLatLng(cluster.getLatLng())
           .setContent(popupContent)
           .openOn(map);
@@ -213,7 +212,7 @@ export default function MarkerCluster({
       }
       delete (window as any).openInitiativeDetails;
     };
-  }, [initiatives, map, onMarkerClick, getStatusColor, getStatusText]);
+  }, [initiatives, map, onMarkerClick, getStatusColor, getStatusText, onError]);
 
   return null;
 }
