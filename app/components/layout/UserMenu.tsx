@@ -8,15 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Plus } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
+import Link from "next/link";
+
+const supabase = createClient();
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
-  const [, setDisplayName] = useState<string>("");
-  const supabase = createClient();
+  const [displayName, setDisplayName] = useState<string>("");
 
   useEffect(() => {
     const loadDisplayName = async () => {
@@ -37,16 +38,17 @@ export default function UserMenu() {
     };
     
     loadDisplayName();
-  }, [user, supabase]);
+  }, [user]);
 
   if (!user) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="h-8 px-3 rounded-md">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4" />
+            <span className="hidden sm:inline text-sm">{displayName}</span>
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -55,6 +57,13 @@ export default function UserMenu() {
           <Link href="/profile" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             <span>Profil</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/initiatives/create" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            <span>Publier une initiative</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

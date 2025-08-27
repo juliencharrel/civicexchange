@@ -1,10 +1,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "../../lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-
-const supabase = createClient();
+import { createClient } from "../../lib/supabase/client";
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +12,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const supabase = createClient();
 
 export function AuthProvider({ 
   children, 

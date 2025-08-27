@@ -65,8 +65,6 @@ export default function MapComponent({
   const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
   const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
   const isSearchingRef = useRef(false);
-  
-
 
   // Fonction pour récupérer les initiatives dans les bounds
   const fetchInitiativesInBounds = useCallback(async (bounds: L.LatLngBounds) => {
@@ -247,7 +245,7 @@ export default function MapComponent({
   return (
     <div className="flex h-full md:flex-row flex-col">
       {/* Liste des initiatives */}
-      <div className="w-full md:w-[500px] bg-white border-r overflow-y-auto md:h-full h-40 flex-shrink-0">
+      <div className="w-full md:w-[500px] bg-white border-r overflow-y-auto md:h-full h-[50vh] flex-shrink-0">
         <div className="p-4 border-b flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {locationName ? `Initiatives à ${locationName}` : 'Initiatives'}
@@ -286,7 +284,7 @@ export default function MapComponent({
       </div>
 
       {/* Carte */}
-      <div className="flex-1 h-full md:h-full h-60 flex-grow relative">
+      <div className="flex-1 h-full md:h-full h-[50vh] flex-grow relative">
         {/* Indicateur de chargement sur la carte */}
         {loading && (
           <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-md px-3 py-2">

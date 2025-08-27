@@ -15,7 +15,6 @@ const supabase = createClient();
 
 interface InitiativeCardProps {
   initiative: Initiative;
-  userHasVoted?: boolean;
   requestCount?: number;
   variant?: "default" | "map";
   className?: string;
@@ -23,41 +22,44 @@ interface InitiativeCardProps {
 
 export default function InitiativeCard({
   initiative,
-  userHasVoted = false,
   requestCount = 0,
   variant = "default",
   className = ""
 }: InitiativeCardProps) {
   const router = useRouter();
+  const { user } = useAuth();
   
-  // Gérer le cas où le contexte d'authentification n'est pas disponible
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth.user;
-  } catch {
-    // Si le contexte d'authentification n'est pas disponible, on continue sans utilisateur
-    console.log('Contexte d\'authentification non disponible');
-  }
-  
-  const [hasVoted, setHasVoted] = useState(userHasVoted);
+  const [hasVoted, setHasVoted] = useState(false);
   const [voteCount, setVoteCount] = useState(initiative.votes_count || 0);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Mettre à jour l'état de vote si userHasVoted change
+  // Récupérer l'état de vote de l'utilisateur pour cette initiative
   useEffect(() => {
-    setHasVoted(userHasVoted);
-  }, [userHasVoted]);
+    const fetchUserVote = async () => {
+      if (!user) {
+        setHasVoted(false);
+        return;
+      }
+
+      const { data: vote } = await supabase
+        .from("initiatives_votes")
+        .select("initiative_id")
+        .eq("initiative_id", initiative.id)
+        .eq("user_id", user.id)
+        .single();
+      
+      setHasVoted(!!vote);
+    };
+
+    fetchUserVote();
+  }, [user, initiative.id, supabase]);
 
   const handleVote = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Empêcher la navigation vers la page détaillée
     
     if (!user) {
-      // Déclencher l'ouverture du modal de login du Header
-      const loginButton = document.querySelector('[data-login-trigger]') as HTMLButtonElement;
-      if (loginButton) {
-        loginButton.click();
-      }
+      // Rediriger vers la page d'authentification
+      router.push('/auth');
       return;
     }
 

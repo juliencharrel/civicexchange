@@ -4,9 +4,6 @@ import ClientInitiativesWrapper from "./ClientInitiativesWrapper";
 export default async function InitiativesSection() {
   const supabase = await createClient();
   
-  // Récupérer l'utilisateur connecté côté serveur
-  const { data: { user } } = await supabase.auth.getUser();
-  
   // Récupérer les initiatives avec les juridictions et catégories
   const { data: initiatives, error } = await supabase
     .from("initiatives")
@@ -55,17 +52,6 @@ export default async function InitiativesSection() {
     requestCountMap.set(request.initiative_id, count + 1);
   });
 
-  // Si l'utilisateur est connecté, récupérer ses votes pour toutes les initiatives
-  let userVotes: string[] = [];
-  if (user) {
-    const { data: votes } = await supabase
-      .from("initiatives_votes")
-      .select("initiative_id")
-      .eq("user_id", user.id);
-    
-    userVotes = votes?.map(vote => vote.initiative_id) || [];
-  }
-
   return (
     <section className="py-16 px-4 md:px-8 lg:px-12 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -76,7 +62,6 @@ export default async function InitiativesSection() {
           {transformedInitiatives && transformedInitiatives.length > 0 ? (
             <ClientInitiativesWrapper 
               initiatives={transformedInitiatives}
-              initialUserVotes={userVotes}
               requestCountMap={requestCountMap}
             />
           ) : (

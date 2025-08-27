@@ -11,6 +11,7 @@ export async function updateSession(request: NextRequest) {
     '/initiatives', // listing
     '/map', // map page
     '/test', // test
+    '/auth', // auth page
     // ajoute d'autres routes publiques ici
   ];
   
