@@ -27,8 +27,10 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
   
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
+  const [forceCenter, setForceCenter] = useState(false);
+  const [hasRequestedGeolocation, setHasRequestedGeolocation] = useState(false);
   
-  const { latitude: geoLat, longitude: geoLng, loading: geoLoading, error: geoError } = useGeolocation();
+  const { latitude: geoLat, longitude: geoLng, loading: geoLoading, error: geoError, getCurrentPosition } = useGeolocation();
 
   useEffect(() => {
     async function determineLocation() {
@@ -44,7 +46,7 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
         return;
       }
 
-      // Sinon, essayer la géolocalisation du navigateur
+      // Si on a déjà une géolocalisation, l'utiliser
       if (geoLat && geoLng) {
         setLocation({
           lat: geoLat,
@@ -56,8 +58,41 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
         return;
       }
 
-      // Si la géolocalisation échoue, essayer par IP
+      // Si la géolocalisation a échoué, essayer par IP
       if (!geoLoading && geoError) {
+        try {
+          const ipLocation = await getLocationByIP();
+          if (ipLocation) {
+            setLocation({
+              lat: ipLocation.latitude,
+              lng: ipLocation.longitude,
+              zoom: 10,
+              name: ipLocation.city || 'Votre région'
+            });
+          } else {
+            // Fallback sur Paris
+            setLocation({
+              lat: DEFAULT_LOCATION.latitude,
+              lng: DEFAULT_LOCATION.longitude,
+              zoom: 10,
+              name: DEFAULT_LOCATION.city || 'Paris'
+            });
+          }
+        } catch {
+          // Fallback sur Paris
+          setLocation({
+            lat: DEFAULT_LOCATION.latitude,
+            lng: DEFAULT_LOCATION.longitude,
+            zoom: 10,
+            name: DEFAULT_LOCATION.city || 'Paris'
+          });
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Si on n'a pas de géolocalisation et pas d'erreur, essayer par IP par défaut
+      if (!geoLoading && !geoError && !geoLat && !geoLng) {
         try {
           const ipLocation = await getLocationByIP();
           if (ipLocation) {
@@ -98,7 +133,24 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
     determineLocation();
   }, [searchParams, geoLat, geoLng, geoLoading, geoError]);
 
+  // Si on demande la géolocalisation et qu'on l'obtient, mettre à jour la position
+  useEffect(() => {
+    if (geoLat && geoLng && hasRequestedGeolocation) {
+      setLocation({
+        lat: geoLat,
+        lng: geoLng,
+        zoom: 14,
+        name: 'Votre position'
+      });
+      // Forcer le centrage de la carte
+      setForceCenter(true);
+      setTimeout(() => setForceCenter(false), 100);
+      setHasRequestedGeolocation(false); // Reset pour éviter les re-centrages non désirés
+    }
+  }, [geoLat, geoLng, hasRequestedGeolocation]);
+
   const handleUseMyLocation = () => {
+    // Si on a déjà la géolocalisation, l'utiliser immédiatement
     if (geoLat && geoLng) {
       setLocation({
         lat: geoLat,
@@ -106,6 +158,13 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
         zoom: 14, // Zoom plus proche pour la position personnelle
         name: 'Votre position'
       });
+      // Forcer le centrage de la carte
+      setForceCenter(true);
+      setTimeout(() => setForceCenter(false), 100);
+    } else {
+      // Sinon, demander la géolocalisation
+      setHasRequestedGeolocation(true);
+      getCurrentPosition();
     }
   };
 
@@ -147,27 +206,17 @@ export default function MapWithGeolocation({ searchParams, initialInitiatives }:
 
   return (
     <div className="h-[calc(100vh-64px)] relative">
-      {/* Bouton de géolocalisation */}
-      {geoLat && geoLng && (
-        <div className="absolute top-4 right-4 z-[1000]">
-          <Button
-            onClick={handleUseMyLocation}
-            size="sm"
-            variant="outline"
-            className="bg-white shadow-md"
-          >
-            <Navigation className="h-4 w-4 mr-2" />
-            Ma position
-          </Button>
-        </div>
-      )}
-      
       <MapComponent 
         initialLat={location.lat}
         initialLng={location.lng}
         initialZoom={location.zoom}
         locationName={location.name}
         initialInitiatives={initialInitiatives}
+        geoLat={geoLat}
+        geoLng={geoLng}
+        onUseMyLocation={handleUseMyLocation}
+        geoLoading={geoLoading}
+        forceCenter={forceCenter}
       />
     </div>
   );

@@ -11,6 +11,8 @@ import { MapPin } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InitiativeCard from '@/components/shared/InitiativeCard';
 import type { Initiative } from '@/types/database';
+import { Button } from '@/components/ui/button';
+import { Navigation } from 'lucide-react';
 
 // Fix pour les icônes Leaflet
 // @ts-expect-error - Leaflet icon fix
@@ -27,20 +29,24 @@ interface MapComponentProps {
   initialZoom: number;
   locationName: string;
   initialInitiatives?: Initiative[];
+  geoLat?: number | null;
+  geoLng?: number | null;
+  onUseMyLocation?: () => void;
+  geoLoading?: boolean;
+  forceCenter?: boolean;
 }
 
-// Composant pour centrer la carte (une seule fois à l'initialisation)
-function MapCenter({ lat, lng }: { lat: number; lng: number }) {
+// Composant pour centrer la carte
+function MapCenter({ lat, lng, zoom, forceCenter }: { lat: number; lng: number; zoom?: number; forceCenter?: boolean }) {
   const map = useMap();
   const hasCenteredRef = useRef(false);
   
   useEffect(() => {
-    // Ne centrer qu'une seule fois à l'initialisation
-    if (!hasCenteredRef.current) {
-      map.setView([lat, lng], map.getZoom());
+    if (forceCenter || !hasCenteredRef.current) {
+      map.setView([lat, lng], zoom || map.getZoom());
       hasCenteredRef.current = true;
     }
-  }, [lat, lng, map]);
+  }, [lat, lng, zoom, map, forceCenter]);
   
   return null;
 }
@@ -50,12 +56,18 @@ export default function MapComponent({
   initialLng, 
   initialZoom, 
   locationName,
-  initialInitiatives
+  initialInitiatives,
+  geoLat,
+  geoLng,
+  onUseMyLocation,
+  geoLoading,
+  forceCenter
 }: MapComponentProps) {
   const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives || []);
   const [loading, setLoading] = useState(false);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [clusteringAvailable, setClusteringAvailable] = useState(true);
+  const [forceCenterState, setForceCenterState] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
   const supabase = createClient();
@@ -65,6 +77,21 @@ export default function MapComponent({
   const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
   const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
   const isSearchingRef = useRef(false);
+
+  // Fonction pour gérer le clic sur "Ma position"
+  const handleMyLocationClick = () => {
+    if (onUseMyLocation) {
+      onUseMyLocation();
+    }
+  };
+
+  // Mettre à jour forceCenterState quand la prop change
+  useEffect(() => {
+    if (forceCenter) {
+      setForceCenterState(true);
+      setTimeout(() => setForceCenterState(false), 100);
+    }
+  }, [forceCenter]);
 
   // Fonction pour récupérer les initiatives dans les bounds
   const fetchInitiativesInBounds = useCallback(async (bounds: L.LatLngBounds) => {
@@ -294,6 +321,24 @@ export default function MapComponent({
             </div>
           </div>
         )}
+
+        {/* Bouton de géolocalisation en bas à droite */}
+        <div className="absolute bottom-4 right-4 z-[1000]">
+          <Button
+            onClick={handleMyLocationClick}
+            size="sm"
+            variant="outline"
+            className="bg-white shadow-md hover:bg-gray-50 w-10 h-10 p-0"
+            title="Ma position"
+            disabled={geoLoading}
+          >
+            {geoLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+            ) : (
+              <Navigation className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
         
         <MapContainer
           center={[initialLat, initialLng]}
@@ -313,7 +358,12 @@ export default function MapComponent({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
-          <MapCenter lat={initialLat} lng={initialLng} />
+                      <MapCenter 
+              lat={forceCenterState && geoLat ? geoLat : initialLat} 
+              lng={forceCenterState && geoLng ? geoLng : initialLng} 
+              zoom={forceCenterState && geoLat && geoLng ? 14 : initialZoom}
+              forceCenter={Boolean(forceCenterState && geoLat && geoLng)}
+            />
           <MapEvents onMapMove={handleMapMove} />
           
           {clusteringAvailable ? (
