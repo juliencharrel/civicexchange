@@ -62,7 +62,6 @@ export default async function InitiativesSection() {
           {transformedInitiatives && transformedInitiatives.length > 0 ? (
             <ClientInitiativesWrapper 
               initiatives={transformedInitiatives}
-              requestCountMap={requestCountMap}
             />
           ) : (
             <div className="col-span-full">Aucune initiative trouvée.</div>
