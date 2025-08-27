@@ -103,8 +103,8 @@ export default function AuthPage() {
                     password_label: 'Mot de passe',
                     button_label: 'Créer mon compte',
                     loading_button_label: 'Création en cours...',
-                    social_provider_text: 'S\'inscrire avec {{provider}}',
-                    link_text: 'Pas de compte ? S\'inscrire',
+                    social_provider_text: 'S&apos;inscrire avec {{provider}}',
+                    link_text: 'Pas de compte ? S&apos;inscrire',
                   },
                   forgotten_password: {
                     email_label: 'Adresse email',
@@ -123,7 +123,7 @@ export default function AuthPage() {
           <p className="text-sm text-gray-500">
             En continuant, vous acceptez nos{' '}
             <a href="#" className="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium underline-offset-4 hover:underline">
-              conditions d'utilisation
+              conditions d&apos;utilisation
             </a>{' '}
             et notre{' '}
             <a href="#" className="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium underline-offset-4 hover:underline">

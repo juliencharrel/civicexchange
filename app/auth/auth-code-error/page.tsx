@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function AuthCodeError() {
@@ -8,10 +8,10 @@ export default function AuthCodeError() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Erreur d'authentification
+            Erreur d&apos;authentification
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Une erreur s'est produite lors de l'authentification
+            Une erreur s&apos;est produite lors de l&apos;authentification
           </p>
         </div>
         
@@ -21,7 +21,7 @@ export default function AuthCodeError() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-gray-600 mb-6">
-              Le lien d'authentification a expiré ou est invalide. 
+              Le lien d&apos;authentification a expiré ou est invalide. 
               Veuillez réessayer de vous connecter.
             </p>
             <Link href="/auth">

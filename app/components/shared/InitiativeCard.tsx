@@ -52,7 +52,7 @@ export default function InitiativeCard({
     };
 
     fetchUserVote();
-  }, [user, initiative.id, supabase]);
+  }, [user, initiative.id]);
 
   const handleVote = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Empêcher la navigation vers la page détaillée

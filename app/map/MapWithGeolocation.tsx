@@ -4,7 +4,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { getLocationByIP, DEFAULT_LOCATION } from '@/lib/geolocation';
 import MapComponent from './MapComponent';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { Initiative } from '@/types/database';
 
 interface MapWithGeolocationProps {

@@ -1,30 +1,22 @@
-"use client";
-import { useState, useEffect } from "react";
-import { createClient } from "../../../lib/supabase/client";
-import InitiativeCard from "../shared/InitiativeCard";
-import type { Initiative } from "../../types/database";
-
-const supabase = createClient();
+'use client';
+import InitiativeCard from '@/components/shared/InitiativeCard';
+import type { Initiative } from '@/types/database';
 
 interface ClientInitiativesWrapperProps {
   initiatives: Initiative[];
-  requestCountMap: Map<string, number>;
 }
 
-export default function ClientInitiativesWrapper({ 
-  initiatives, 
-  requestCountMap
-}: ClientInitiativesWrapperProps) {
+export default function ClientInitiativesWrapper({ initiatives }: ClientInitiativesWrapperProps) {
   return (
-    <>
-      {initiatives.map((initiative) => (
+    <div className="space-y-4">
+      {initiatives.map((initiative: Initiative) => (
         <InitiativeCard
           key={initiative.id}
           initiative={initiative}
-          requestCount={requestCountMap.get(initiative.id) || 0}
           variant="default"
+          className="mb-0"
         />
       ))}
-    </>
+    </div>
   );
 } 
