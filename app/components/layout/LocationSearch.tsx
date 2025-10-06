@@ -1,16 +1,23 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, Search, X, MapPin, FileText } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import LocationSearchResults from "@/components/shared/LocationSearchResults";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import type { Initiative } from "@/types/database";
 
 export default function LocationSearch() {
   const router = useRouter();
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
+  const [initiativeResults, setInitiativeResults] = useState<Initiative[]>([]);
+  const [initiativeLoading, setInitiativeLoading] = useState(false);
+  const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
+  const supabase = createClient();
+  
   const {
     input,
     setInput,
@@ -22,27 +29,60 @@ export default function LocationSearch() {
     selectedJurisdiction,
     setSelectedJurisdiction,
     containerRef,
-    handleChange,
+    handleChange: handleLocationChange,
     clearSelection
   } = useLocationSearch();
+
+  // Function to search initiatives
+  const searchInitiatives = async (query: string) => {
+    if (query.length < 3) {
+      setInitiativeResults([]);
+      return;
+    }
+
+    setInitiativeLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('initiatives')
+        .select(`
+          *,
+          jurisdiction:jurisdictions!inner(*),
+          category:initiative_categories(*)
+        `)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%,organizing_body.ilike.%${query}%`)
+        .limit(5);
+
+      if (error) {
+        console.error('Error searching initiatives:', error);
+        setInitiativeResults([]);
+      } else {
+        setInitiativeResults(data || []);
+      }
+    } catch (error) {
+      console.error('Error searching initiatives:', error);
+      setInitiativeResults([]);
+    } finally {
+      setInitiativeLoading(false);
+    }
+  };
 
   // Clear le champ quand on navigue depuis la page de carte
   useEffect(() => {
     const previousPathname = previousPathnameRef.current;
     
     // Si on était sur /map et qu'on navigue vers une autre page, clear le champ
-    if (previousPathname === '/map' && pathname !== '/map' && selectedJurisdiction) {
+    if (previousPathname === '/map' && pathname !== '/map' && (selectedJurisdiction || selectedInitiative)) {
       clearSelection();
     }
     
     // Mettre à jour le pathname précédent
     previousPathnameRef.current = pathname;
-  }, [pathname, selectedJurisdiction, clearSelection]);
+  }, [pathname, selectedJurisdiction, selectedInitiative, clearSelection]);
 
   // Écouter l'événement de clear depuis la carte
   useEffect(() => {
     const handleClearSearch = () => {
-      if (selectedJurisdiction) {
+      if (selectedJurisdiction || selectedInitiative) {
         clearSelection();
       }
     };
@@ -51,7 +91,35 @@ export default function LocationSearch() {
     return () => {
       window.removeEventListener('clearLocationSearch', handleClearSearch);
     };
-  }, [clearSelection, selectedJurisdiction]);
+  }, [clearSelection, selectedJurisdiction, selectedInitiative]);
+
+  // Combined search function
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+    
+    // Clear selections if input is modified
+    if (selectedJurisdiction || selectedInitiative) {
+      setSelectedJurisdiction("");
+      setSelectedInitiative(null);
+      setShowResults(false);
+    }
+
+    // Search both locations and initiatives
+    handleLocationChange(e);
+    searchInitiatives(val);
+  };
+
+  function selectInitiative(initiative: Initiative) {
+    setInput(initiative.title);
+    setSelectedInitiative(initiative);
+    setShowResults(false);
+    setResults([]);
+    setInitiativeResults([]);
+
+    // Navigate to initiative details page
+    router.push(`/initiatives/${initiative.id}`);
+  }
 
   function selectPlace(place: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const displayName = place.display_name;
@@ -130,7 +198,7 @@ export default function LocationSearch() {
         <Input
           value={input}
           onChange={handleChange}
-          placeholder="Rechercher un lieu..."
+          placeholder="Search places or initiatives"
           className={`pr-10 ${selectedJurisdiction ? 'bg-blue-50 border-blue-200' : ''}`}
           onFocus={handleFocus}
           onClick={handleInputClick}

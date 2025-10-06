@@ -9,10 +9,10 @@ export default function Hero() {
       
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex-1">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Partagez vos <span className="text-blue-200">innovations</span> territoriales
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            Discover <span className="text-blue-200">tangible</span> civic initiatives
           </h1>
-          <p className="mb-8 text-lg">Explorez, documentez et adoptez les meilleures pratiques municipales. Une plateforme d&apos;échange entre élus et représentants territoriaux.</p>
+          <p className="mb-8 text-lg">Explore, share, and connect with community-driven projects that make a real difference in your neighborhood.</p>
           
           {/* Boutons d'action */}
           <div className="flex flex-col sm:flex-row gap-4">
@@ -22,7 +22,7 @@ export default function Hero() {
                 className="bg-white text-blue-700 hover:bg-blue-50 border-0 font-semibold px-6 py-3 text-base w-full sm:w-auto"
               >
                 <MapPin className="h-5 w-5 mr-2" />
-                Voir les initiatives autour de chez moi
+                Explore initiatives near me
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </Link>
