@@ -156,12 +156,12 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
 
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden fixed inset-0 top-16">
       {/* Contenu principal - Split view */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Barre latérale de catégories */}
-        <div className="w-[160px] bg-gray-50 border-r border-gray-200 flex-shrink-0">
-          <div className="p-4">
+        <div className="w-[160px] bg-gray-50 border-r border-gray-200 flex-shrink-0 h-full flex flex-col">
+          <div className="p-4 flex-1 overflow-y-auto">
             <div className="flex flex-col space-y-2">
               <button
                 onClick={() => setSelectedCategory('All')}
@@ -201,8 +201,8 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
         </div>
 
         {/* Liste des initiatives */}
-        <div className="w-[400px] bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0">
-          <div className="flex-1 overflow-y-auto">
+        <div className="w-[400px] bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0 h-full">
+          <div className="flex-1 overflow-y-auto h-full">
             {filteredInitiatives.length > 0 ? (
               <div className="p-4 space-y-4">
                 {filteredInitiatives.map((initiative) => (
@@ -234,7 +234,7 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
         </div>
 
         {/* Carte */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative h-full">
           <SplitMapComponent
             initialLat={mapCenter.lat}
             initialLng={mapCenter.lng}
