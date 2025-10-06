@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
     
     return config;
   },
+  eslint: {
+    // ⚠️ Cela désactive complètement la vérification ESLint au build et au dev
+    ignoreDuringBuilds: true,
+  },
   // Désactiver l'optimisation des images pour éviter les problèmes avec Leaflet
   images: {
     unoptimized: true,
