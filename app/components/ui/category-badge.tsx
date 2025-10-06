@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCategories, Category } from "@/contexts/CategoriesContext";
+import { Layers, HeartHandshake, BookOpen, ShieldCheck, House, CarFront, Trees, Paintbrush, UserCheck, Building2 as Building3D, MapPin as MapPin3D } from "lucide-react";
 
 interface CategoryBadgeProps {
   categoryId?: string;
@@ -11,19 +12,21 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
-const categoryColors: Record<string, string> = {
-  "Mobility / Transport": "bg-blue-100 text-blue-800 border-blue-200",
-  "Environment / Ecology": "bg-green-100 text-green-800 border-green-200",
-  "Culture / Arts": "bg-purple-100 text-purple-800 border-purple-200",
-  "Social / Solidarity": "bg-pink-100 text-pink-800 border-pink-200",
-  "Education / Youth": "bg-indigo-100 text-indigo-800 border-indigo-200",
-  "Health / Well-being": "bg-emerald-100 text-emerald-800 border-emerald-200",
-  "Urban Planning / Development": "bg-orange-100 text-orange-800 border-orange-200",
-  "Economy / Entrepreneurship": "bg-yellow-100 text-yellow-800 border-yellow-200",
-  "Innovation / Tech": "bg-cyan-100 text-cyan-800 border-cyan-200",
-  "Governance / Civic": "bg-slate-100 text-slate-800 border-slate-200",
-  "Safety / Security": "bg-red-100 text-red-800 border-red-200",
-  "Leisure / Sports": "bg-lime-100 text-lime-800 border-lime-200",
+// Function to get 3D icon for category (same as sidebar)
+const getCategoryIcon = (categoryName: string) => {
+  const name = categoryName.toLowerCase();
+  if (name.includes('economy') || name.includes('économie')) return Building3D;
+  if (name.includes('health') || name.includes('santé')) return HeartHandshake;
+  if (name.includes('education') || name.includes('éducation')) return BookOpen;
+  if (name.includes('safety') || name.includes('sécurité')) return ShieldCheck;
+  if (name.includes('housing') || name.includes('logement')) return House;
+  if (name.includes('mobility') || name.includes('mobilité')) return CarFront;
+  if (name.includes('environment') || name.includes('environnement')) return Trees;
+  if (name.includes('culture')) return Paintbrush;
+  if (name.includes('civic') || name.includes('civique')) return UserCheck;
+  if (name.includes('community') || name.includes('communauté')) return Building3D;
+  if (name.includes('urban') || name.includes('design')) return MapPin3D;
+  return Building3D; // Default icon
 };
 
 export function CategoryBadge({ 
@@ -52,20 +55,19 @@ export function CategoryBadge({
     return null;
   }
   
-  const colorClass = categoryColors[category.name] || "bg-gray-100 text-gray-800 border-gray-200";
+  const IconComponent = getCategoryIcon(category.name);
   
   return (
     <Badge 
-      variant={variant}
+      variant="outline"
       className={cn(
-        "inline-flex items-center gap-1.5 border",
-        colorClass,
+        "inline-flex items-center gap-1.5 bg-white text-gray-700 border-gray-200 hover:bg-gray-50",
         size === "sm" && "text-xs px-2 py-0.5",
         size === "lg" && "text-sm px-3 py-1",
         className
       )}
     >
-      <span className="text-sm">{category.icon}</span>
+      <IconComponent className="h-3 w-3" />
       <span>{category.name}</span>
     </Badge>
   );

@@ -39,6 +39,7 @@ export default function SplitMapComponent({
   const hasInitializedCenterRef = useRef(false);
   const boundsThrottleRef = useRef<number | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [selectedInitiativeDetails, setSelectedInitiativeDetails] = useState<Initiative | null>(null);
 
   // Fonction pour gérer le clic sur "Ma position"
   const handleMyLocationClick = () => {
@@ -209,6 +210,26 @@ export default function SplitMapComponent({
     }
   }, [initialInitiatives, onInitiativeClick, selectedInitiative]);
 
+  // Listen for initiative details events
+  useEffect(() => {
+    const handleShowInitiativeDetails = (event: CustomEvent) => {
+      const { initiative, lat, lng } = event.detail;
+      setSelectedInitiativeDetails(initiative);
+      
+      // Move map to initiative location
+      if (mapRef.current && lat && lng) {
+        mapRef.current.panTo({ lat, lng });
+        mapRef.current.setZoom(14);
+      }
+    };
+
+    window.addEventListener('showInitiativeDetails', handleShowInitiativeDetails as EventListener);
+    
+    return () => {
+      window.removeEventListener('showInitiativeDetails', handleShowInitiativeDetails as EventListener);
+    };
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -282,6 +303,39 @@ export default function SplitMapComponent({
               <Navigation className="h-4 w-4" />
             )}
           </Button>
+        </div>
+      )}
+
+      {/* Initiative Details Tooltip */}
+      {selectedInitiativeDetails && (
+        <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-sm">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-lg font-bold line-clamp-2">{selectedInitiativeDetails.title}</h3>
+            <button
+              onClick={() => setSelectedInitiativeDetails(null)}
+              className="text-gray-400 hover:text-gray-600 ml-2"
+            >
+              ×
+            </button>
+          </div>
+          
+          {selectedInitiativeDetails.description && (
+            <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+              {selectedInitiativeDetails.description}
+            </p>
+          )}
+          
+          {selectedInitiativeDetails.jurisdiction && (
+            <p className="text-xs text-gray-500 mb-2">
+              📍 {selectedInitiativeDetails.jurisdiction.name}
+            </p>
+          )}
+          
+          {selectedInitiativeDetails.organizing_body && (
+            <p className="text-xs text-gray-500">
+              🏢 {selectedInitiativeDetails.organizing_body}
+            </p>
+          )}
         </div>
       )}
 

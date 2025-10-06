@@ -2,16 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '../../../lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Resizer } from '@/components/ui/resizer';
-import LocationSearch from '@/components/layout/LocationSearch';
 import InitiativeCard from '@/components/shared/InitiativeCard';
-import { CategoryButtons } from '@/components/forms/category-buttons';
 import { useCategories } from '@/contexts/CategoriesContext';
-import { Search, Filter, MapPin, List, Loader2, X } from 'lucide-react';
+import { MapPin, Layers, HeartHandshake, BookOpen, ShieldCheck, House, CarFront, Trees, Paintbrush, UserCheck, Building2 as Building3D, MapPin as MapPin3D } from 'lucide-react';
 import type { Initiative } from '@/types/database';
 
 // Import dynamique du composant de carte
@@ -35,9 +28,7 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
   const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives);
   const [filteredInitiatives, setFilteredInitiatives] = useState<Initiative[]>(initialInitiatives);
   const [loading, setLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; zoom: number }>({
     lat: 46.603354,
     lng: 1.888334,
@@ -48,30 +39,36 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
   const { categories } = useCategories();
   const supabase = createClient();
 
-  // Filtrer les initiatives basé sur la recherche et la catégorie
+  // Function to get 3D icon for category
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('economy') || name.includes('économie')) return Building3D;
+    if (name.includes('health') || name.includes('santé')) return HeartHandshake;
+    if (name.includes('education') || name.includes('éducation')) return BookOpen;
+    if (name.includes('safety') || name.includes('sécurité')) return ShieldCheck;
+    if (name.includes('housing') || name.includes('logement')) return House;
+    if (name.includes('mobility') || name.includes('mobilité')) return CarFront;
+    if (name.includes('environment') || name.includes('environnement')) return Trees;
+    if (name.includes('culture')) return Paintbrush;
+    if (name.includes('civic') || name.includes('civique')) return UserCheck;
+    if (name.includes('community') || name.includes('communauté')) return Building3D;
+    if (name.includes('urban') || name.includes('design')) return MapPin3D;
+    return Building3D; // Default icon
+  };
+
+  // Filtrer les initiatives basé sur la catégorie
   useEffect(() => {
     let filtered = initiatives;
 
     // Filtre par catégorie
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'All') {
       filtered = filtered.filter(initiative => 
         initiative.category_id === selectedCategory
       );
     }
 
-    // Filtre par recherche textuelle
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(initiative =>
-        initiative.title.toLowerCase().includes(query) ||
-        initiative.description?.toLowerCase().includes(query) ||
-        initiative.jurisdiction?.name.toLowerCase().includes(query) ||
-        initiative.organizing_body?.toLowerCase().includes(query)
-      );
-    }
-
     setFilteredInitiatives(filtered);
-  }, [initiatives, selectedCategory, searchQuery]);
+  }, [initiatives, selectedCategory]);
 
   // Charger les initiatives depuis la base de données
   const loadInitiatives = async (bounds?: { north: number; south: number; east: number; west: number }) => {
@@ -157,81 +154,53 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
     }
   };
 
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSearchQuery('');
-  };
-
-  const hasActiveFilters = selectedCategory || searchQuery.trim();
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
-      {/* Header avec recherche et filtres */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex-1 max-w-md">
-            <LocationSearch />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher une initiative..."
-                className="w-64"
-              />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-            
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? "bg-blue-50 border-blue-200" : ""}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
-            
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Effacer
-              </Button>
-            )}
-          </div>
-        </div>
-        
-        {/* Panneau de filtres */}
-        {showFilters && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <CategoryButtons
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
-            />
-          </div>
-        )}
-      </div>
-
       {/* Contenu principal - Split view */}
       <div className="flex-1 flex">
-        {/* Liste des initiatives */}
-        <div className="w-1/2 border-r border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <List className="h-5 w-5" />
-                Initiatives ({filteredInitiatives.length})
-              </h2>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {/* Barre latérale de catégories */}
+        <div className="w-[160px] bg-gray-50 border-r border-gray-200 flex-shrink-0">
+          <div className="p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Catégories</h3>
+            <div className="flex flex-col space-y-2">
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className={`text-sm px-3 py-2 rounded-md transition-colors flex flex-col items-center gap-1 ${
+                  selectedCategory === 'All'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+                }`}
+                title="All"
+              >
+                <Layers className="h-4 w-4" />
+                <span className="text-xs">All</span>
+              </button>
+              {categories.map((category) => {
+                const isActive = selectedCategory === category.id;
+                const IconComponent = getCategoryIcon(category.name);
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`text-sm px-3 py-2 rounded-md transition-colors flex flex-col items-center gap-1 ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+                    }`}
+                    title={category.name}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                    <span className="text-xs">{category.name}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          
+        </div>
+
+        {/* Liste des initiatives */}
+        <div className="w-[400px] bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0">
           <div className="flex-1 overflow-y-auto">
             {filteredInitiatives.length > 0 ? (
               <div className="p-4 space-y-4">
@@ -264,7 +233,7 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
         </div>
 
         {/* Carte */}
-        <div className="w-1/2 relative">
+        <div className="flex-1 relative">
           <SplitMapComponent
             initialLat={mapCenter.lat}
             initialLng={mapCenter.lng}

@@ -12,10 +12,23 @@ export default function Header() {
     <header className="bg-white border-b fixed top-0 left-0 right-0 z-50">
       
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-        {/* Logo - texte complet sur desktop, compact sur mobile */}
-        <Link href="/" className="font-bold text-xl text-[var(--color-primary)]">
-          <span className="hidden md:inline">CivicExchange</span>
-          <span className="md:hidden text-lg">CE</span>
+        {/* Logo */}
+        <Link href="/" className="flex items-center">
+          <img 
+            src="/logo-tangible.svg" 
+            alt="Tangible" 
+            className="h-8 w-auto"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling.style.display = 'block';
+            }}
+          />
+          <span 
+            className="font-bold text-2xl text-[var(--color-primary)] hidden" 
+            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+          >
+            Tangible
+          </span>
         </Link>
         
         {/* Barre de recherche - toujours visible */}
@@ -34,14 +47,12 @@ export default function Header() {
             </Link>
           )}
           
-          {/* Bouton d'authentification unifié pour les utilisateurs non connectés */}
-          {!user && (
-            <Link href="/auth">
-              <Button variant="outline">
-                Connexion / Inscription
-              </Button>
-            </Link>
-          )}
+          {/* Post an initiative button for all users */}
+          <Link href="/initiatives/create">
+            <Button variant="outline">
+              Post an initiative
+            </Button>
+          </Link>
           
           {user && <UserMenu />}
         </nav>
