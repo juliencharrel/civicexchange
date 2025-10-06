@@ -198,7 +198,7 @@ export default function LocationSearch() {
         <Input
           value={input}
           onChange={handleChange}
-          placeholder="Rechercher un lieu..."
+          placeholder="Search places or initiatives"
           className={`pr-10 ${selectedJurisdiction ? 'bg-blue-50 border-blue-200' : ''}`}
           onFocus={handleFocus}
           onClick={handleInputClick}

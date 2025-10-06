@@ -162,15 +162,15 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
         {/* Barre latérale de catégories */}
         <div className="w-[160px] bg-gray-50 border-r border-gray-200 flex-shrink-0">
           <div className="p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Catégories</h3>
             <div className="flex flex-col space-y-2">
               <button
                 onClick={() => setSelectedCategory('All')}
                 className={`text-sm px-3 py-2 rounded-md transition-colors flex flex-col items-center gap-1 ${
                   selectedCategory === 'All'
-                    ? 'bg-blue-600 text-white'
+                    ? 'text-white font-bold'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
                 }`}
+                style={selectedCategory === 'All' ? { backgroundColor: '#3C3CFF' } : {}}
                 title="All"
               >
                 <Layers className="h-4 w-4" />
@@ -185,9 +185,10 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
                     onClick={() => setSelectedCategory(category.id)}
                     className={`text-sm px-3 py-2 rounded-md transition-colors flex flex-col items-center gap-1 ${
                       isActive
-                        ? 'bg-blue-600 text-white'
+                        ? 'text-white font-bold'
                         : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
                     }`}
+                    style={isActive ? { backgroundColor: '#3C3CFF' } : {}}
                     title={category.name}
                   >
                     <IconComponent className="h-4 w-4" />
