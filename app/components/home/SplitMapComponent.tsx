@@ -19,6 +19,7 @@ interface SplitMapComponentProps {
   geoLoading?: boolean;
 }
 
+
 export default function SplitMapComponent({ 
   initialLat, 
   initialLng, 
