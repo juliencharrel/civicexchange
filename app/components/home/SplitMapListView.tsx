@@ -7,8 +7,8 @@ import { useCategories } from '@/contexts/CategoriesContext';
 import { MapPin, Layers, HeartHandshake, BookOpen, ShieldCheck, House, CarFront, Trees, Paintbrush, UserCheck, Building2 as Building3D, MapPin as MapPin3D } from 'lucide-react';
 import type { Initiative } from '@/types/database';
 
-// Import dynamique du composant de carte
-const SplitMapComponent = dynamic(() => import('./SplitMapComponent'), {
+// Import dynamique du composant de carte simple
+const SimpleMapComponent = dynamic(() => import('./SimpleMapComponent'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
@@ -37,6 +37,9 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   
   const { categories } = useCategories();
+  
+  // Check if there are active filters
+  const hasActiveFilters = selectedCategory !== 'All';
   const supabase = createClient();
 
   // Function to get 3D icon for category
@@ -71,10 +74,10 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
   }, [initiatives, selectedCategory]);
 
   // Charger les initiatives depuis la base de données
-  const loadInitiatives = async (bounds?: { north: number; south: number; east: number; west: number }) => {
+  const loadInitiatives = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from("initiatives")
         .select(`
           id, title, description, category, category_id, status, organizing_body, start_date, end_date, 
@@ -99,17 +102,6 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
           )
         `)
         .order('created_at', { ascending: false });
-
-      // Si on a des bounds, filtrer par zone géographique
-      if (bounds) {
-        query = query
-          .gte('jurisdiction.latitude', bounds.south)
-          .lte('jurisdiction.latitude', bounds.north)
-          .gte('jurisdiction.longitude', bounds.west)
-          .lte('jurisdiction.longitude', bounds.east);
-      }
-
-      const { data, error } = await query;
 
       if (error) {
         console.error('Erreur lors du chargement des initiatives:', error);
@@ -137,10 +129,6 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
       loadInitiatives();
     }
   }, []);
-
-  const handleMapBoundsChange = (bounds: { north: number; south: number; east: number; west: number }) => {
-    loadInitiatives(bounds);
-  };
 
   const handleInitiativeClick = (initiative: Initiative) => {
     setSelectedInitiative(initiative);
@@ -235,12 +223,11 @@ export default function SplitMapListView({ initialInitiatives }: SplitMapListVie
 
         {/* Carte */}
         <div className="flex-1 relative h-full">
-          <SplitMapComponent
+          <SimpleMapComponent
             initialLat={mapCenter.lat}
             initialLng={mapCenter.lng}
             initialZoom={mapCenter.zoom}
-            initialInitiatives={filteredInitiatives}
-            onBoundsChange={handleMapBoundsChange}
+            initiatives={filteredInitiatives}
             onInitiativeClick={handleInitiativeClick}
             selectedInitiative={selectedInitiative}
           />
