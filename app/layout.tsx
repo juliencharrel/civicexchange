@@ -1,25 +1,21 @@
 import "./styles/globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { createClient } from "../lib/supabase/server";
 import Header from "./components/layout/Header";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CategoriesProvider } from "./contexts/CategoriesContext";
 import { Analytics } from "@vercel/analytics/next"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "CivicExchange",
-  description: "Plateforme d'échange d'initiatives civiques",
+  title: "Tangible",
+  description: "Discover and explore civic initiatives in your community",
 };
 
 export default async function RootLayout({
@@ -40,7 +36,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} font-sans antialiased`}
       >
         <AuthProvider initialUser={user}>
           <CategoriesProvider>

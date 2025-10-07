@@ -10,6 +10,33 @@ import '@/styles/marker-cluster.css';
 import type { Initiative } from '@/types/database';
 import { getStatusColor, getStatusText } from '@/lib/initiative-utils';
 
+// Create custom marker icon with Tangible branding
+const createCustomIcon = (color: string = '#3C3CFF') => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="
+        background-color: ${color};
+        width: 24px;
+        height: 24px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      ">
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24]
+  });
+};
+
+// Use only the main brand color for all markers
+const getMarkerIcon = (categoryName?: string) => {
+  return createCustomIcon('#3C3CFF'); // Tangible brand color for all markers
+};
+
 // Import dynamique de MarkerClusterGroup
 let MarkerClusterGroup: any = null;
 if (typeof window !== 'undefined') {
@@ -125,10 +152,11 @@ export default function MarkerCluster({
     initiatives.forEach((initiative) => {
       if (!initiative.jurisdiction) return;
 
+      const markerIcon = getMarkerIcon(initiative.category?.name);
       const marker = L.marker([
         initiative.jurisdiction.latitude, 
         initiative.jurisdiction.longitude
-      ]);
+      ], { icon: markerIcon });
 
       // Créer le contenu du popup
       const popupContent = `

@@ -68,6 +68,7 @@ export default function MapComponent({
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [clusteringAvailable, setClusteringAvailable] = useState(true);
   const [forceCenterState, setForceCenterState] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const mapRef = useRef<L.Map | null>(null);
   const supabase = createClient();
@@ -77,6 +78,28 @@ export default function MapComponent({
   const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
   const searchStartBoundsRef = useRef<L.LatLngBounds | null>(null);
   const isSearchingRef = useRef(false);
+
+  const CATEGORY_OPTIONS = [
+    'All',
+    'Economy',
+    'Health',
+    'Education',
+    'Safety',
+    'Housing',
+    'Mobility',
+    'Environment',
+    'Culture',
+    'Civic',
+    'Community',
+    'Urban Design',
+  ];
+
+  const filteredInitiatives = (selectedCategory === 'All')
+    ? initiatives
+    : initiatives.filter((initiative) => {
+        const name = (initiative as any).category?.name || initiative.category;
+        return typeof name === 'string' && name.toLowerCase() === selectedCategory.toLowerCase();
+      });
 
   // Fonction pour gérer le clic sur "Ma position"
   const handleMyLocationClick = () => {
@@ -267,12 +290,40 @@ export default function MapComponent({
     clearHeaderSearch();
   }, [fetchInitiativesInBounds, updateURL, clearHeaderSearch]);
 
-
-
+  console.log('MapComponent rendering with selectedCategory:', selectedCategory);
+  
   return (
     <div className="flex h-full md:flex-row flex-col">
-      {/* Liste des initiatives */}
-      <div className="w-full md:w-[500px] bg-white border-r overflow-y-auto md:h-full h-[50vh] flex-shrink-0">
+      {/* Liste des initiatives avec sidebar */}
+      <div className="w-full md:w-[700px] bg-white border-r overflow-y-auto md:h-full h-[50vh] flex-shrink-0 flex">
+        {/* Barre latérale de catégories */}
+        <div className="w-[200px] bg-red-100 border-r overflow-y-auto flex-shrink-0">
+          <div className="p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Catégories</h3>
+            <div className="flex flex-col space-y-2">
+              {CATEGORY_OPTIONS.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`text-sm px-3 py-2 rounded-md border transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
+                    }`}
+                    title={cat}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Contenu de la liste des initiatives */}
+        <div className="flex-1 flex flex-col">
         <div className="p-4 border-b flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {locationName ? `Initiatives à ${locationName}` : 'Initiatives'}
@@ -281,19 +332,19 @@ export default function MapComponent({
             <p className="text-sm text-gray-500 mt-1">Chargement...</p>
           ) : (
             <p className="text-sm text-gray-500 mt-1">
-              {initiatives.length} initiative{initiatives.length > 1 ? 's' : ''} trouvée{initiatives.length > 1 ? 's' : ''}
+              {filteredInitiatives.length} initiative{filteredInitiatives.length > 1 ? 's' : ''} trouvée{filteredInitiatives.length > 1 ? 's' : ''}
             </p>
           )}
         </div>
         
         <div className="p-4 space-y-4 overflow-y-auto">
-          {initiatives.length === 0 && !loading ? (
+          {filteredInitiatives.length === 0 && !loading ? (
             <div className="text-center py-8">
               <MapPin className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Aucune initiative trouvée dans cette zone</p>
             </div>
           ) : (
-            initiatives.map((initiative: Initiative) => (
+            filteredInitiatives.map((initiative: Initiative) => (
               <div
                 key={initiative.id}
                 className={selectedInitiative?.id === initiative.id ? 'ring-2 ring-blue-500 rounded-lg' : ''}
@@ -307,6 +358,7 @@ export default function MapComponent({
               </div>
             ))
           )}
+        </div>
         </div>
       </div>
 
@@ -354,8 +406,8 @@ export default function MapComponent({
           }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+            url="https://api.maptiler.com/maps/dataviz-light/{z}/{x}/{y}.png?key=nARttWq91UBYdpEdw2eg"
           />
           
                       <MapCenter 
@@ -368,13 +420,13 @@ export default function MapComponent({
           
           {clusteringAvailable ? (
             <MarkerCluster
-              initiatives={initiatives}
+              initiatives={filteredInitiatives}
               onMarkerClick={setSelectedInitiative}
               onError={() => setClusteringAvailable(false)}
             />
           ) : (
             <FallbackMarkers
-              initiatives={initiatives}
+              initiatives={filteredInitiatives}
               onMarkerClick={setSelectedInitiative}
             />
           )}
